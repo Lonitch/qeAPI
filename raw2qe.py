@@ -278,11 +278,11 @@ class qeIpt:
         fill.append(poslst)
 
         if 'restart_mode' in self.defaultval['CONTROL'].keys():
-            fn = open(self.svpath+self.defaultval['CONTROL']['prefix']+'_'+
-            self.defaultval['CONTROL']['calculation']+'_restart.in', "w")
+            temp = self.defaultval['CONTROL']['prefix']+'_'+self.defaultval['CONTROL']['calculation']+'_restart.in'
+            fn = open(os.path.join(self.svpath,temp), "w")
         else:
-            fn = open(self.svpath+self.defaultval['CONTROL']['prefix']+'_'+
-            self.defaultval['CONTROL']['calculation']+'.in', "w")
+            temp = self.defaultval['CONTROL']['prefix']+'_'+self.defaultval['CONTROL']['calculation']+'.in'
+            fn = open(os.path.join(self.svpath,temp), "w")
         fn.write(self.pw.format(*fill))
         fn.close()
 
@@ -291,7 +291,7 @@ class qeIpt:
     def prep_ppipt(self):
         prefix = self.defaultval['CONTROL']['prefix']
         self.pp=self.pp.format(prefix,prefix,self.defaultval['CONTROL']['outdir'],prefix, prefix)
-        fn = open(self.svpath+self.defaultval['CONTROL']['prefix']+'_pp.in', "w")
+        fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_pp.in'), "w")
         fn.write(self.pp)
         fn.close()
 
@@ -299,7 +299,7 @@ class qeIpt:
     def prep_dosipt(self):
         prefix = self.defaultval['CONTROL']['prefix']
         self.dos=self.dos.format(prefix,self.defaultval['CONTROL']['outdir'],prefix)
-        fn = open(self.svpath+self.defaultval['CONTROL']['prefix']+'_dos.in', "w")
+        fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_dos.in'), "w")
         fn.write(self.pp)
         fn.close()
 
@@ -307,7 +307,7 @@ class qeIpt:
     def prep_pdosipt(self):
         prefix = self.defaultval['CONTROL']['prefix']
         self.dos=self.dos.format(prefix,self.defaultval['CONTROL']['outdir'],prefix)
-        fn = open(self.svpath+self.defaultval['CONTROL']['prefix']+'_pdos.in', "w")
+        fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_pdos.in'), "w")
         fn.write(self.pp)
         fn.close()
 
