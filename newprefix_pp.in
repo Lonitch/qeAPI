@@ -1,0 +1,16 @@
+&inputpp
+	prefix		= "newprefix"
+	filplot		= "newprefix.charge"
+	plot_num 	= 0
+	outdir  	= "/home/sliu135/scratch/newprefix" 
+/
+
+&plot
+	nfile = 1
+	filepp(1) = "newprefix.charge"
+	weight(1) = 1.0
+	iflag = 3
+	output_format = 6
+	fileout = 'newprefix.cube'
+/
+
