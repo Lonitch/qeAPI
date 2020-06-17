@@ -95,7 +95,9 @@ def prep_DDECipt(iptPath):
 
 
 def run_DDEC(iptPath,sourcePath):
-    subprocess.run([sourcePath, iptPath])
+    #subprocess.run([sourcePath, iptPath])
+    p = subprocess.Popen(sourcePath, universal_newlines=True, stdin=subprocess.PIPE)
+    p.communicate(iptPath)
     print('complete!')
 
 
