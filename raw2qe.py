@@ -18,8 +18,8 @@ import os
 # Current has a function "check_bravais" to assign correct index of bravais lattice to your system,
 # where the global variable IBRAV is used. IBRAV contains all possible shortnames for Bravais lattice,
 # more information can be found here: https://en.wikipedia.org/wiki/Brillouin_zone.
-# The index of "free" lattice is not included. You can also use "update_default" function to change your 
-# ibrav to 0 (free lattice).
+# The index of "free" lattice is not included. But you can also use "update_default" function to change your 
+# ibrav to 0 (see below).
 
 IBRAV = {'CUB':1,'FCC':2,'BCC':3,'RHL':4,'TET':6,'BCT':7,'ORC':8,'ORCC':9,
          'ORCF':10,'ORCI':11,'MCL':12,'MCLC':13, 'TRI':14}
@@ -176,7 +176,10 @@ DEFAULTVAL = {
 
 class qeIpt:
     def __init__(self, path, filname,svpath=None,prefix=None):
-
+        # path: where your cif file is.
+        # filname: file name of your cif file.
+        # svpath: path to where you want your QE input files stored,same as 'path' if not given.
+        # prefix: the prefix for your calculation job, same as 'filname' if not given.
         self.atoms=read(filename=os.path.join(path, filname))
         self.pw = HEAD
         self.pp = HEAD_rho
