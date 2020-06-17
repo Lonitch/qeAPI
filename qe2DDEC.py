@@ -9,7 +9,7 @@ Created by Sizhe @06/15/2020
 
 # !!! You need Python3.5+, scipy, and numpy to run current script !!!
 
-import os, shutil
+import os, shutil, re
 from ase.io import read
 from collections import Counter, defaultdict
 from scipy.spatial import distance
@@ -52,21 +52,22 @@ DDEC6
 CORENUM = {'Li':0,'Na':2,'Cu':10,'Fe':10,'H':0,'K':10,'Mg':2,'N':2,
 'Ni':10,'O':2,'Rb':28,'S':10,'Se':28,'Ag':28,'Br':28,'C':2,'Cl':10,'Cs':46}
 
-def redistri_opt(optRoot,a=0,b=6):
+def redistri_opt(optRoot,strlst):
     # we use this function to build separate folders for different pp.x calculation cases
     # so that the results of DDEC analysis for each pp.x case will be found in the same folder 
-    # with charge density files. Two indices (a,b) are used here to specify similar substrings 
-    # in file names. For example, the files 'aabb01.opt' and 'aabb02.in' share the same substring 
-    # "aabb" in their names, and we can put them into the same folder by using a=0, b=4.
+    # with charge density files. strlst is a list of name string here to specify similar substrings 
+    # in file names. For example, the files 'aabb01.opt' and 'aabbf.in' share the same substring 
+    # "aabb" from the start, and we can put them into a folder named as 'aabb' by using strlst=['aabb'].
+    # On the other hand, 'faabb.in' is not put into 'aabb' folder as it starts with 'f'.
     # The parameter 'optRoot' is required to tell the function where all the pp.x calc results are stored.
     onlyfiles = [f for f in os.listdir(optRoot) if os.path.isfile(os.path.join(optRoot, f))]
     for f in onlyfiles:
-        folderName = f[a:b]
-        if not os.path.exists(os.path.join(optRoot,folderName)):
-            os.mkdir(folderName)
-            shutil.copy(os.path.join(optRoot, f), os.path.join(optRoot,folderName))
+        foldername=re.findall(r"(?=(" + '|'.join(strlst) + r"))", f)[0]
+        if not os.path.isdir(os.path.join(optRoot,foldername)):
+            os.mkdir(os.path.join(optRoot,foldername))
+            shutil.move(os.path.join(optRoot, f), os.path.join(optRoot,foldername))
         else:
-            shutil.copy(os.path.join(optRoot, f), os.path.join(optRoot,folderName))
+            shutil.move(os.path.join(optRoot, f), os.path.join(optRoot,foldername))
 
 
 def prep_DDECipt(iptPath):
@@ -78,9 +79,7 @@ def prep_DDECipt(iptPath):
     for f in os.listdir(iptPath):
         if f[-4:]=='cube':
             # !!!change '//' into '\' when you use this script on Linux system!!!
-            lst = f.split('//')[:-1]+["total_density.cube"]
-            newName = '//'.join(lst)
-            os.rename(f,newName)
+            os.rename(os.path.join(iptPath,f),os.path.join(iptPath,"total_density.cube"))
 
     # calculate total number of core charges
     data = read(os.path.join(iptPath,"total_density.cube"), format='cube')
