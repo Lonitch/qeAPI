@@ -95,11 +95,38 @@ def prep_DDECipt(iptPath):
 
 
 def run_DDEC(iptPath,sourcePath):
-    #subprocess.run([sourcePath, iptPath])
+    # 'iptPath' is where you store your 'job_control.txt' and 'total_density.cube'
+    # 'sourcePath' is the absolute path to the binary file.
+    # The iptPath must be a raw path string with single backslashes
+    # An example of iptPath in Windows OS: r'C:\User\Documents\H2O' for windows OS
+    # An example of iptPath in Linux OS: r'/user/input/H2O'
+    # !!! Please do not forget the raw string prefix "r" when you prepare the iptPath strings!!!
     p = subprocess.Popen(sourcePath, universal_newlines=True, stdin=subprocess.PIPE)
     p.communicate(iptPath)
     print('complete!')
 
+def checkme(iptPath):
+    # This function should be run if your DDEC analysis was not conducted properly,i.e.no bond-order result is
+    # obtained. If the pathes are set correctly when you run the analysis, the reason for incorrect outcome is 
+    # mostly related to incorrect setting of 'net charge' in 'job_control.txt'.
+    # The function find the number of residual electrons in 'total_cube_DDEC_analysis.output', and add that 
+    # number to the "net charge" option of the "job_control.txt" in the same folder.
+    # !!!Make sure "job_control.txt" and 'total_cube_DDEC_analysis.output' are in the same folder!!!
+    f = open(os.path.join(iptPath,'total_cube_DDEC_analysis.output')).readlines()
+    k = 1
+    while 'checkme' not in f[-k]:
+        k+=1
+    residual=float(f[-k].split()[-1])
+    job = open(os.path.join(iptPath,'job_control.txt')).readlines()[1]
+    core = int(job.split()[0])+residual
+    new = open(os.path.join(iptPath,'job_control.txt')).readlines()
+    new[1]=str(core)
+    new = '\n'.join(new)
+    f = open(os.path.join(iptPath,'job_control.txt'),'w')
+    f.write(new)
+    f.close()
+
+    return
 
 def overlap_pop(iptPath, clusterDict):
     # One of the outputs from DDEC is the overlap population analysis, which gives the extent to which the atomic
