@@ -1,12 +1,29 @@
 # Python-QE API
-
-A set of tools are listed here for preparing input files for DFT calculations using Quantum Espresso. This repository(or **repo**) contains three pieces of Python scripts:
+A set of tools are listed here for preparing and analyzing DFT calculations using Quantum Espresso. This repository(or **repo**) contains three pieces of Python scripts:
 
 - `raw2qe.py`,a collection of functions and classes that transform CIF files into input texts.
 - `qe2cif.py`, a collection of functions that reads output files from QE calculations and write atomic configurations into CIF files
 - `qe2DDEC.py`, a collection of functions that reads charge density CUBE files, and analyze them using DDEC6 method to give bond order, and overlap population information of arbitrary atomic configurations.
 
-This documentation shows a way to set up running environment for individual users.
+And three **jupyter notebooks** are inluded to show some examples of using functions in the three script files:
+
+- `pWprep_test.ipynb` shows the use of `raw2qe.py`
+
+- `qe2DDEC_test.ipynb` shows the use of `qe2DDEC.py`
+
+- `qe2cif_test.ipynb` shows the use of `qe2cif.py`
+
+The sections below are arranged as
+- [Install Python](#install-python)       
+- [Install Packages](#install-packages)    
+- [Compile Quantum Espresso](#compile-quantum-espresso)        
+    - [Without libxc](#without-libxc)        
+    - [With Libxc](#with-libxc)  
+- [Set up file system ready for DFT calculation](#set-up-file-system-ready-for-dft-calculation)   
+- [Submit Calculation jobs](#submit-calculation-jobs)        
+    - [!!! The workflow for running calculations](#-the-workflow-for-running-calculations)
+- [Navigation of the Repo](#navigation-of-the-repo)
+- [Citation](#citation)
 
 ## Install Python
 
