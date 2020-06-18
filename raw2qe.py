@@ -251,6 +251,16 @@ class qeIpt:
         if self.defaultval['CONTROL']['prefix'] not in self.defaultval['CONTROL']['outdir']:
             self.defaultval['CONTROL']['outdir']=DEFAULTVAL['CONTROL']['outdir']+self.defaultval['CONTROL']['prefix']
 
+    def delete_entry(self,entries):
+    # This function is used to delete entries in self.defaultval.
+    # the argument "entries" is a list of tuple with first and second element being panel name and option name
+    # respectively. For example, the commend below delete the 'input_dft' option in 'SYSTEM' panel
+    #
+    # obj.delete_entry([('SYSTEM','input_dft')])
+    # 
+        for a,b in entries:
+            self.defaultval[a].pop(b,None)
+
     # prepare input file for pw.x
     def prep_pwipt(self):
         fill = []
