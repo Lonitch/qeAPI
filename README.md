@@ -45,15 +45,15 @@ We need to install `ASE` package (check the documentation [here](https://wiki.fy
 3. Now you can use `ASE` in your python code.
 
 To use **jupyter notebook**, we simply open **Anaconda Navigation** and click the **jupyter** icon. Your browser will start automatically and show the following GUI:
-![init-jupyter](images/init-jupyter.png)
+![init-jupyter](images/init-jupyter.PNG)
 You can start by creating a **folder** with the `New` drop-down menu:
-![init-jupyter-2](images/init-jupyter-2.png)
+![init-jupyter-2](images/init-jupyter-2.PNG)
 The name of your new folder will be **Untitled folder** but you can always change its name later. We now open **Untitled folder** in **jupyter** to arrive at the following interface:
-![init-jupyter-3](images/init-jupyter-3.png)
+![init-jupyter-3](images/init-jupyter-3.PNG)
 Create a `Python 3` notebook and open it to get
-![init-jupyter-4](images/init-jupyter-4.png)
+![init-jupyter-4](images/init-jupyter-4.PNG)
 where the command window in green rectangle is the **current active window**. Let's write a simple command and run it using `shift+enter` combo:
-![init-jupyter-5](images/init-jupyter-5.png)
+![init-jupyter-5](images/init-jupyter-5.PNG)
 From the picture above, we know that
 - **Jupyter notebook** create new empty command window below the previously active window
 - The output of the previously active window shows up right before the current active window.
@@ -127,7 +127,7 @@ The `run_cases.py` in this repo prepares `PBS` files for batch job submission on
 - If `_pdos` in the name of a `.in` file, ask the system to run the command of `./projwfc.x -in xxxx_pdos.in > xxxx_pdos.out`.
 
 A typical `PBS` file is shown below:
-![pbs](images/pbs.png)
+![pbs](images/pbs.PNG)
 where 
 
 1. `#PBS -l nodes=X:ppn=12` set how many number of computation nodes and how many CPU cores per node you want to use for the calculation.
