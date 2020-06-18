@@ -112,11 +112,18 @@ def checkme(iptPath):
     # The function find the number of residual electrons in 'total_cube_DDEC_analysis.output', and add that 
     # number to the "net charge" option of the "job_control.txt" in the same folder.
     # !!!Make sure "job_control.txt" and 'total_cube_DDEC_analysis.output' are in the same folder!!!
+    # !!!This function only works when 'checkme' is an integer, i.e., you calculation of the number of core 
+    # electrons is wrong
     f = open(os.path.join(iptPath,'total_cube_DDEC_analysis.output')).readlines()
     k = 1
     while 'checkme' not in f[-k]:
         k+=1
-    residual=float(f[-k].split()[-1])
+
+    if float(f[-k].split()[-1]).is_integer():
+        residual = int(float(f[-k].split()[-1]))
+    else:
+        print('checkme is not integer, function is terminated')
+        
     job = open(os.path.join(iptPath,'job_control.txt')).readlines()[1]
     core = int(job.split()[0])+residual
     new = open(os.path.join(iptPath,'job_control.txt')).readlines()
