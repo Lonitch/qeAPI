@@ -17,7 +17,7 @@ top = """#!/bin/bash
 
 module load python/3
 module load intel/18.0
-cd /home/yourID/inputdir/
+cd /home/sliu135/inputdir/
 
 # tell me what you are doing
 set -x
@@ -69,13 +69,17 @@ for file in glob.glob('*.in'):
 	pbs.write(content)
 	pbs.close()
 
+lb=0
+lb2 =1
+## The jobs with pw.x is always run first, followed by jobs with dos.x, projwfc.x, and pp.x
 for i in range(len(filelst)):
 	for j in range(len(filelst[i])):
-		if p:
-			jobs.write('JOB_{}=`qsub {}`\n'.format(p+1, filelst[i][j]))
-		else:
-			jobs.write('JOB_{}=`qsub {}`\n'.format(p+1, filelst[i][j]))
-		p += 1
+		if lb==0:
+			jobs.write('JOB_{}=`qsub {}`\n'.format(lb2, filelst[i][j]))
+			lb2+=1
+		elif lb!=0:
+			jobs.write('JOB_{}=`qsub -W depend=afterany:$JOB_{} {}`\n'.format(lb2,lb,filelst[i][j]))
+	lb=lb2-1
 				
 jobs.close()
 os.chmod(depname, stat.S_IRWXU)
