@@ -36,7 +36,8 @@ Once you installed `Anaconda`, open the `Anaconda Navigator` by finding it in yo
 ![nav](images/nav-defaults.png)
 
 Now click the `install` button below **jupyter notebook**. Jupyter notebook provides an intuitive way to write and inteprete your Python code as we shall see later.
-### Install Packages
+
+## Install Packages
 We need to install `ASE` package (check the documentation [here](https://wiki.fysik.dtu.dk/ase/)) in your `Anaconda` distribution. To do so, click the `Environment` in the navigator shown above to get
 ![pkg-list](images/nav-pkg-list.png)
 1. If `ASE` is not installed, you can find it by navigating to the drop-down menu `Not installed` and then searching for `ASE`:
@@ -57,6 +58,7 @@ where the command window in green rectangle is the **current active window**. Le
 From the picture above, we know that
 - **Jupyter notebook** create new empty command window below the previously active window
 - The output of the previously active window shows up right before the current active window.
+
 ## Compile Quantum Espresso
 In this section we provide a way to compile Quantum Espresso on normal university-level computation platform, with and without external libraries. The file system for each individual user is run on a Linux system with an access to `home` folder.
 ### Without libxc
@@ -136,7 +138,7 @@ where
 
 2. `#PBS -q eng-research` choose your job queue (the queue is `eng-research`).
 
-3. `#PBS -l walltime=01:00:00` tells the system to kill your job after some time (the job will be killed after 1 hr in this case). **The maximum walltime is 4hrs**.
+3. `#PBS -l walltime=01:00:00` tells the system to kill your job after some time (the job will be killed after 1 hr in this case). **The maximum walltime is 4hrs**.(**If you have a large job that takes more than 4hrs to finish, try to use `restart_mode` in input file, see `pwPrep_test.ipynb`**)
 
 4. `#PBS -N rlx` gives a name for your job(the name is `rlx` in this case).
 
@@ -156,15 +158,25 @@ where
 ## Navigation of the Repo
 >**Important note:** Please pay attention to the comment lines starting with **!!!** in the code. Those lines tell you how to change the code if you're using different pseudopotential or you are using it in different operating system environment.
 - `pwPrep_test.ipynb` shows the examples of using `raw2qe.py` to
+
 (1) Update options in input files
+
 (2) Prepare input files for `pw.x`,`dos.x`, and `projwfc.x`
+
 - `qe2DDEC.ipynb` shows the examples of using `qe2DDEC.py` to 
+
 (1) prepare `job_control.txt` to initialize DDEC6 analysis
+
 (2) run DDEC6 binary executable in a pythonic way
+
 (3) extract useful infomation from the analyses, e.g. overlap population, bond orders (**under construction**)
+
 - `qe2cif.ipynb` shows the examples of using `qe2cif.py` to
+
 (1) read atomic configurations from QE outputs
+
 (2) save relaxed atomic configurations in a `cif` format
+
 (3) adjust atoms' info using `ASE`
 
 

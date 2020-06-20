@@ -69,7 +69,6 @@ def redistri_opt(optRoot,strlst):
         else:
             shutil.move(os.path.join(optRoot, f), os.path.join(optRoot,foldername))
 
-
 def prep_DDECipt(iptPath):
     # This function is used to prepare input files for DDEC6 analysis using CUBE files from pp.x calcualtions
     # 'iptPath' tells where the "CUBE" file is stored, and the input file must be named as 'job_control.txt'.
@@ -92,7 +91,6 @@ def prep_DDECipt(iptPath):
     fn = open(os.path.join(iptPath,'job_control.txt'), "w")
     fn.write(DDECHEAD.format(coren))
     fn.close()
-
 
 def run_DDEC(iptPath,sourcePath):
     # 'iptPath' is where you store your 'job_control.txt' and 'total_density.cube'
