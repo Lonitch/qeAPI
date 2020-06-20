@@ -17,7 +17,7 @@ import numpy as np
 import subprocess 
 
 # DDECHEAD is a template for making input files for DDEC analysis
-# !!! Please change "atomic densities directory complete path" in "head" to your DDEC installation!!!
+# !!! Please change "atomic densities directory complete path" in "DDECHEAD" to your DDEC installation!!!
 DDECHEAD = """<net charge>
 {}
 </net charge>
@@ -75,9 +75,9 @@ def prep_DDECipt(iptPath):
     # 'iptPath' tells where the "CUBE" file is stored, and the input file must be named as 'job_control.txt'.
     # Notice that the cube file should also be renamed as 'total_density.cube' in the same folder.
 
-    # change cube file's name into "total_density.cube"
+    # change cube file's name into "total_density.cube", if theres is no such file.
     for f in os.listdir(iptPath):
-        if f[-4:]=='cube':
+        if f[-4:]=='cube' and 'total_density' not in f:
             # !!!change '//' into '\' when you use this script on Linux system!!!
             os.rename(os.path.join(iptPath,f),os.path.join(iptPath,"total_density.cube"))
 
@@ -116,19 +116,21 @@ def checkme(iptPath):
     # electrons is wrong
     f = open(os.path.join(iptPath,'total_cube_DDEC_analysis.output')).readlines()
     k = 1
-    while 'checkme' not in f[-k]:
+    while k<len(f) and 'checkme' not in f[-k]:
         k+=1
-
+    if k==len(f):
+        print('check the format of job_control.txt in {}'.format(iptPath))
     if float(f[-k].split()[-1]).is_integer():
         residual = int(float(f[-k].split()[-1]))
     else:
-        print('checkme is not integer, function is terminated')
+        print('checkme is not integer')
+        residual = float(f[-k].split()[-1])
         
     job = open(os.path.join(iptPath,'job_control.txt')).readlines()[1]
-    core = int(job.split()[0])+residual
+    core = float(job.split()[0])+residual
     new = open(os.path.join(iptPath,'job_control.txt')).readlines()
-    new[1]=str(core)
-    new = '\n'.join(new)
+    new[1]=str(core)+'\n'
+    new = ''.join(new)
     f = open(os.path.join(iptPath,'job_control.txt'),'w')
     f.write(new)
     f.close()

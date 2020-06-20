@@ -1,0 +1,21 @@
+&input
+title = 'new config for Rb atom',
+atom = 'Rb',
+iswitch = 3,
+dft = 'PBEsol',
+prefix='Rb_PBEsol'
+config = '[Kr] 5s1'
+/
+
+&inputp
+zval = 9,
+pseudotype=3,
+file_pseudopw='Rb_regen.upf',
+lloc = 1,
+author = 'Sizhe Liu'
+/
+
+&test 
+! This control panel is optional for PP generation
+nconf = 1
+/

@@ -74,6 +74,7 @@ HEAD_rho="""&inputpp
 	iflag = 3
 	output_format = 6
 	fileout = '{}.cube'
+{}
 /
 
 """
@@ -301,9 +302,21 @@ class qeIpt:
 
 
     # prepare input file for pp.x
-    def prep_ppipt(self):
+    def prep_ppipt(self, newEntries=None):
+        # newEntries is a dictionary containing new features you want to add in your charge density calculation
+        # The key of each entry is the feature name. For example, you can set up your charge density sampling 
+        # grid by using
+        # newEntries = { 'nx':400,
+        #                'ny':400,
+        #                'nz':400}
         prefix = self.defaultval['CONTROL']['prefix']
-        self.pp=self.pp.format(prefix,prefix,self.defaultval['CONTROL']['outdir'],prefix, prefix)
+        if newEntries is None:
+            self.pp=self.pp.format(prefix,prefix,self.defaultval['CONTROL']['outdir'],prefix, prefix,'')
+        else:
+            newstr = ""
+            for k,v in newEntries.items():
+                newstr+="   {}={}\n".format(k,v)
+            self.pp=self.pp.format(prefix,prefix,self.defaultval['CONTROL']['outdir'],prefix, prefix,newstr)
         fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_pp.in'), "w")
         fn.write(self.pp)
         fn.close()

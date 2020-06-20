@@ -1,0 +1,20 @@
+&inputpp
+	prefix		= "NaTi2(PO4)3"
+	filplot		= "NaTi2(PO4)3.charge"
+	plot_num 	= 0
+	outdir  	= "/home/sliu135/scratch/" 
+/
+
+&plot
+	nfile = 1
+	filepp(1) = "NaTi2(PO4)3.charge"
+	weight(1) = 1.0
+	iflag = 3
+	output_format = 6
+	fileout = 'NaTi2(PO4)3.cube'
+   nx=1000
+   ny=1000
+   nz=1000
+
+/
+
