@@ -261,15 +261,16 @@ def bond_order(iptpath):
     #
     # Current function find the total bond order for all the atoms based on DFT-DDEC6 calculation. It also finds 
     # the contributions to the total bond order from different atomic interactions.
-    # The outcome of this function will be a dictionary named as "combDict" with each entry being the bond order 
-    # composition of each atom. 
+    # The outcome of this function will be a dictionary named as "combDict" with three entries: 'mtx', 'atomNames',
+    # and 'totalBO'
     # An example output for a 3-atom system should be like:
     #
     # combDict = {
-    #               0:[0.9,0.7],
-    #               1:[0.9,1.1],
-    #               2:[0.7,1.1],
-    #               'atomNames':[A,B,C]
+    #               'mtx':[[0,0.9,0.7],
+    #                      [0.9,0,1.1],
+    #                      [0.7,1.1,0]],
+    #               'atomNames':[A,B,C],
+    #               'totalBO':[1.6,2.0,1.8]
     #            }
     # where the list in ith entry contains all the bond order values btw ith atom and all other atoms in the system.
     # The 'atomNames' entry gives chemical symbols of all the atoms in the system starting from the first atom.
@@ -286,15 +287,21 @@ def bond_order(iptpath):
     combDict= defaultdict(list)
     combDict['atomNames']=chemical_symbols
     startline = 0
-    while not data[startline].startswith('Bonded to the'):
+    while 'Bonded to the' not in data[startline]:
             startline+=1
 
+    combDict['mtx'] = []
+    combDict['totalBO'] = []
     for k in range(nat):
-        for m in range(nat-1):
-            combDict[k].append(float(data[startline+m].split()[20]))
-        
-        startline+=nat-1+6
+        cur = [0]*nat
+        while 'Bonded to the' in data[startline]:
+            lst = data[startline].split()
+            idx = cur[int(lst[12])-1]=float(lst[20])
+            startline+=1
+        combDict['mtx'].append(cur)
+        combDict['totalBO'].append(sum(cur))
+        while startline<len(data) and 'Bonded to the' not in data[startline]:
+                startline+=1
     
     return combDict
 
-    
