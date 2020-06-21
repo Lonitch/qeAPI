@@ -1,5 +1,5 @@
 # Python-QE API
-A set of tools are listed here for preparing and analyzing DFT calculations using Quantum Espresso. This repository(or **repo**) contains three pieces of Python scripts:
+Some useful tools are listed here for preparing and analyzing DFT calculations using Quantum Espresso. This repository(or **repo**) contains three pieces of Python scripts:
 
 - `raw2qe.py`,a collection of functions and classes that transform CIF files into input texts.
 - `qe2cif.py`, a collection of functions that reads output files from QE calculations and write atomic configurations into CIF files
@@ -169,7 +169,7 @@ where
 
 (2) run DDEC6 binary executable in a pythonic way
 
-(3) extract useful infomation from the analyses, e.g. overlap population, bond orders (**under construction**)
+(3) extract useful infomation from the analyses, e.g. overlap population, bond orders
 
 - `qe2cif.ipynb` shows the examples of using `qe2cif.py` to
 

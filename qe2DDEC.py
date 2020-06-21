@@ -145,7 +145,7 @@ def overlap_pop(iptPath, clusterDict):
     # Current function calculate the total number of electrons pairing between all possible 
     # atom pairs in atomic clusters defined in 'clusterDict'. 
     # An example of 'clusterDict' could be: 
-    # {1:['Na','Ni'],2:[('O','Na'),('N','H')],3:[('O','Ni','O'),('Na','O','Na')]}
+    # {1:['Na','Ni'],2:[('O','Na'),('N','H')],3:[(1,3,5),(3,6,12)]}
     # Note that 'clusterDict' has three entries: 1, 2, and 3. Each entry contains a list of n-body tuples that
     # you wanna study based on the overlap population. 
     # For the 1-body tuple list, this function gives the atomic bond order (BO) for each atom kind. 
@@ -156,7 +156,7 @@ def overlap_pop(iptPath, clusterDict):
     # {
     #   'Na':[3,2.8],'Ni':[6], 
     #   ('O','Na'):[1.1,2.2],('N','H'):[0.5,0.2,0.3,0.3,0.5],
-    #   3('O','Ni','O'):[6.6],('Na','O','Na'):[3.3]
+    #   (1,3,5):6.6,(3,6,12):3.3
     # }
     # The meanings of each element in different lists are discussed below
 
@@ -180,7 +180,10 @@ def overlap_pop(iptPath, clusterDict):
     tupleDict= defaultdict(list)
     for line in data:
         lst = line.split()
-        tupleDict[(int(lst[0]),int(lst[1]))]=float(lst[-1])
+        try:
+            tupleDict[(int(lst[0]),int(lst[1]))]=float(lst[-1])
+        except:
+            continue
     
     # 1-body overlap population analysis for atomic species listed in clusterDict[1]
     # the results are the overlap populations between targeted atoms and their neighbors
@@ -212,43 +215,41 @@ def overlap_pop(iptPath, clusterDict):
                 t = [(i+1,p+1) for p in b_indices]
                 op = 0
                 for j,v in tupleDict.items():
-                    if j == t:
+                    if j in t:
                         op+=v
                 popDict[s].append(op)
 
-    # 3-body overlap population analysis for atom pairs listed in clusterDict[3]. Each 3-body tuple has its 
-    # "center body" at the first place. If the tuple is (A,B,C), then the code below calculates the number 
-    # of electrons shared between the nearest neighboring pair: A-B,A-C,and B-C for each A atom.
+    # 3-body overlap population analysis for atom pairs listed in clusterDict[3]. If the tuple is (1,2,3), 
+    # then the code below calculates the overlap between the pairs of 1-2,2-3,and 1-3.
     if 3 in clusterDict.keys():
         for s in clusterDict[3]:
             a,b,c = s
-            a_indices,b_indices,c_indices = chemical_symbols[a],chemical_symbols[b],chemical_symbols[c]
-            popDict[s]=[]
-            for i in a_indices:
-                nnb = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[b_indices].get_position()))
-                nnc = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[c_indices].get_position()))
-                op=0
-                for j,v in tupleDict.items():
-                    if j in [(i+1,nnb+1), (i+1,nnc+1),(nnb+1,nnc+1)]:
-                        op+=v
-                popDict[s].append(op)
+            # a_indices,b_indices,c_indices = chemical_symbols[a],chemical_symbols[b],chemical_symbols[c]
+            # for i in a_indices:
+            #     nnb = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[b_indices].get_position()))
+            #     nnc = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[c_indices].get_position()))
+            op=0
+            for j,v in tupleDict.items():
+                if j in [(a+1,b+1), (a+1,c+1),(b+1,c+1)]:
+                    op+=v
+                popDict[s]=op
 
     # 4-body overlap population analysis for atom pairs listed in clusterDict[4], similar to 3-body analysis
     if 4 in clusterDict.keys():
         for s in clusterDict[4]:
             a,b,c,d = s
-            a_indices,b_indices,c_indices = chemical_symbols[a],chemical_symbols[b],chemical_symbols[c]
-            d_indices = chemical_symbols[d]
-            popDict[s]=[]
-            for i in a_indices:
-                nnb = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[b_indices].get_position()))
-                nnc = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[c_indices].get_position()))
-                nnd = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[d_indices].get_position()))
-                op=0
-                for j,v in tupleDict.items():
-                    if j in [(i+1,nnb+1), (i+1,nnc+1),(i+1,nnd+1),(nnb+1,nnc+1),(nnb+1,nnd+1),(nnc+1,nnd+1)]:
-                        op+=v
-                popDict[s].append(op)
+            # a_indices,b_indices,c_indices = chemical_symbols[a],chemical_symbols[b],chemical_symbols[c]
+            # d_indices = chemical_symbols[d]
+            # popDict[s]=[]
+            # for i in a_indices:
+            #     nnb = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[b_indices].get_position()))
+            #     nnc = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[c_indices].get_position()))
+            #     nnd = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[d_indices].get_position()))
+            op=0
+            for j,v in tupleDict.items():
+                if j in [(a+1,b+1), (a+1,c+1),(a+1,d+1),(b+1,c+1),(b+1,d+1),(c+1,d+1)]:
+                    op+=v
+            popDict[s]=op
     return popDict
 
 def bond_order(iptpath):
