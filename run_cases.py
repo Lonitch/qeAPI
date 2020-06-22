@@ -4,7 +4,7 @@ import time
 import fileinput
 
 inbit = ''
-qe = ['mpirun  ./pw.x -npool 8 -in','./dos.x', './projwfc.x', 
+qe = ['mpirun  ./pw.x -npool 8 -in','mpirun ./dos.x -in', 'mpirun ./projwfc.x -in', 
 'mpirun ./pp.x -in']
 top = """#!/bin/bash
 #
@@ -63,7 +63,7 @@ for file in glob.glob('*.in'):
 	else:
 		qemachine=qe[0]
 		filelst[0].append(tempstr)
-	content = top + ' ' + file +'\n\n'
+	content = top + '\n'
 	content = content + '{} {} > {}.out \n'.format(qemachine, file, file[:-3])
 	pbs = open(os.path.join(svpath,tempstr), 'w')
 	pbs.write(content)

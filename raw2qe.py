@@ -224,6 +224,7 @@ class qeIpt:
         cellen = self.atoms.get_cell_lengths_and_angles()
         
         self.defaultval['SYSTEM']['nat']=nat
+        self.defaultval['SYSTEM']['ntyp']=ntyp
         self.defaultval['SYSTEM']['A'] = cellen[0]
         self.defaultval['SYSTEM']['B'] = cellen[1]
         self.defaultval['SYSTEM']['C'] = cellen[2]
@@ -259,8 +260,10 @@ class qeIpt:
     #
     # obj.delete_entry([('SYSTEM','input_dft')])
     # 
+
         for a,b in entries:
             self.defaultval[a].pop(b,None)
+        return
 
     # prepare input file for pw.x
     def prep_pwipt(self):
@@ -272,6 +275,8 @@ class qeIpt:
                     for item in v:
                         temp+=n+'({})={},\n'.format(item[0],item[1])
                 elif isinstance(v, (int, float, complex)):
+                    temp+="{}={},\n".format(n,v)
+                elif v in ['.TRUE.','.FALSE.']:
                     temp+="{}={},\n".format(n,v)
                 else:
                     temp+="{}=\"{}\",\n".format(n,v)
@@ -326,14 +331,14 @@ class qeIpt:
         prefix = self.defaultval['CONTROL']['prefix']
         self.dos=self.dos.format(prefix,self.defaultval['CONTROL']['outdir'],prefix)
         fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_dos.in'), "w")
-        fn.write(self.pp)
+        fn.write(self.dos)
         fn.close()
 
     # prepare input file for projwfc.x
     def prep_pdosipt(self):
         prefix = self.defaultval['CONTROL']['prefix']
-        self.dos=self.dos.format(prefix,self.defaultval['CONTROL']['outdir'],prefix)
+        self.pdos=self.pdos.format(prefix,self.defaultval['CONTROL']['outdir'],prefix)
         fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_pdos.in'), "w")
-        fn.write(self.pp)
+        fn.write(self.pdos)
         fn.close()
 

@@ -12,5 +12,6 @@
 	iflag = 3
 	output_format = 6
 	fileout = 'newprefix.cube'
+
 /
 
