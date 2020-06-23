@@ -15,7 +15,7 @@ Units are converted using CODATA 2006 (Angstrom, eV, etc), as used internally by
 ESPRESSO.
 """
 
-import os
+import os,sys,json,ase
 import operator as op
 import warnings
 from collections import OrderedDict
@@ -1723,3 +1723,47 @@ def get_constraint(constraint_idx):
     else:
         constraint = FixCartesian(a, mask)
     return constraint
+
+
+def read_atomInfo(symbol, concise=True):
+    # Read atom information from a JSON file named as `periodicTable.json`, which is generated
+    # from a Github JSON file found here:https://github.com/Bowserinator/Periodic-Table-JSON.
+    # If `symbol` is a list, then the function return a nested dictionary with each entry 
+    # corresponding each element in `symbol`. If `symbol` is a string of an element's name, 
+    # the function return a simple dictionary with entries being atomic properties. 
+    # If the `symbol` is a ASE atoms object, then the outcome could be:
+    # 1. a list with ith element being the information dictionary of ith atom (concise=False)
+    # 2. a nested dictionary containing the information of all unique atom types (default mode,concise=True)
+    # In case#2, the atomic symbol ordering in "Atoms" object is guaranteed.
+    i,path =0, ''
+    while 'qeAPI' not in path: # find the root path for qeAPI
+        path = sys.path[i]
+        i+=1
+    f = open(os.path.join(path,'periodicTable.json'))
+    table = json.load(f)
+    f.close()
+    if isinstance(symbol,list):
+        elemdict = {}
+        for s in symbol:
+            elemdict[s]=table[s]
+        return elemdict
+    elif isinstance(symbol,str):
+        return table[symbol]
+    elif isinstance(symbol,ase.atoms.Atoms):
+        if concise:
+            elemdict = {}
+            elemlst = symbol.get_chemical_symbols()
+            used = set()
+            uniqlst = [x for x in elemlst if x not in used and (used.add(x) or True)]
+            for s in uniqlst:
+                elemdict[s] = table[s]
+            return elemdict
+        else:
+            elemlst = symbol.get_chemical_symbols()
+            elemInfoLst = []
+            for s in elemlst:
+                elemInfoLst.append(table[s])
+            return elemInfoLst
+    else:
+        print('Invalid input!')
+        return -1

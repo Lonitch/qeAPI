@@ -12,7 +12,6 @@ Created by Sizhe @06/15/2020
 import os, shutil, re
 from ase.io import read
 from collections import Counter, defaultdict
-from scipy.spatial import distance
 import numpy as np
 import subprocess 
 
