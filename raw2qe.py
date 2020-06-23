@@ -15,7 +15,7 @@ import math
 import os
 
 # Index of Bravais Lattice
-# Current has a function "check_bravais" to assign correct index of bravais lattice to your system,
+# Current script has a function "check_bravais" to assign correct index of bravais lattice to your system,
 # where the global variable IBRAV is used. IBRAV contains all possible shortnames for Bravais lattice,
 # more information can be found here: https://en.wikipedia.org/wiki/Brillouin_zone.
 # The index of "free" lattice is not included. But you can also use "update_default" function to change your 
