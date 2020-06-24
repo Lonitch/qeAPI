@@ -14,6 +14,7 @@ from ase.io import read
 from collections import Counter, defaultdict
 import numpy as np
 import subprocess 
+import itertools
 
 # DDECHEAD is a template for making input files for DDEC analysis
 # !!! Please change "atomic densities directory complete path" in "DDECHEAD" to your DDEC installation!!!
@@ -169,6 +170,7 @@ def overlap_pop(iptPath, clusterDict):
     
     # Read file 
     atoms = read(os.path.join(iptPath,"total_density.cube"), format='cube')
+    # a dictionary of indices of all atom types
     chemical_symbols = defaultdict(list)
     nat = 0 # total number of atoms in the system
     for n,v in enumerate(atoms.get_chemical_symbols()):
@@ -218,37 +220,101 @@ def overlap_pop(iptPath, clusterDict):
                         op+=v
                 popDict[s].append(op)
 
-    # 3-body overlap population analysis for atom pairs listed in clusterDict[3]. If the tuple is (1,2,3), 
-    # then the code below calculates the overlap between the pairs of 1-2,2-3,and 1-3.
+    # 3-body overlap population analysis for atom pairs listed in clusterDict[3]. If the tuple is (H,O,H), 
+    # then the code below calculates the overlap between the pairs of H-O,O-H,and H-H. Note that each element
+    # of the tuple could also correspond to a list of atom indices. In such case, all possible 3-combinations 
+    # made of those lists are iterated.
     if 3 in clusterDict.keys():
         for s in clusterDict[3]:
-            a,b,c = s
-            # a_indices,b_indices,c_indices = chemical_symbols[a],chemical_symbols[b],chemical_symbols[c]
-            # for i in a_indices:
-            #     nnb = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[b_indices].get_position()))
-            #     nnc = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[c_indices].get_position()))
-            op=0
-            for j,v in tupleDict.items():
-                if j in [(a+1,b+1), (a+1,c+1),(b+1,c+1)]:
-                    op+=v
-                popDict[s]=op
+            A,B,C = s
+            if len(set([A,B,C]))==3:
+                A,B,C=chemical_symbols[A],chemical_symbols[B],chemical_symbols[C]
+                comb3 = itertools.product(A,B,C)
+
+            elif len(set([A,B,C]))==1:
+                comb3=list(itertools.combinations(chemical_symbols[A],3))
+                if not comb3: # repeat itself
+                    comb3 = list(itertools.product(chemical_symbols[A],chemical_symbols[A],chemical_symbols[A]))
+
+            else:
+                if A==C:
+                    A,C = chemical_symbols[C],chemical_symbols[B]
+                elif B==C:
+                    A,C = chemical_symbols[B],chemical_symbols[A]
+                else:
+                    A,C = chemical_symbols[A],chemical_symbols[C]
+                temp = list(itertools.combinations(A,2))
+                if not temp:
+                    A = list(itertools.product(A,A))
+                else:
+                    A = temp
+                comb3 = [(i,j,k) for i,j in A for k in C]
+
+            for t in comb3:
+                op=0
+                a,b,c = t
+                for j,v in tupleDict.items():
+                    if j in [(a+1,b+1), (a+1,c+1),(b+1,c+1)]:
+                        op+=v
+                popDict[t]=op
 
     # 4-body overlap population analysis for atom pairs listed in clusterDict[4], similar to 3-body analysis
     if 4 in clusterDict.keys():
         for s in clusterDict[4]:
-            a,b,c,d = s
-            # a_indices,b_indices,c_indices = chemical_symbols[a],chemical_symbols[b],chemical_symbols[c]
-            # d_indices = chemical_symbols[d]
-            # popDict[s]=[]
-            # for i in a_indices:
-            #     nnb = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[b_indices].get_position()))
-            #     nnc = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[c_indices].get_position()))
-            #     nnd = np.argmin(distance.cdist(atoms[[i]].get_position()-atoms[d_indices].get_position()))
-            op=0
-            for j,v in tupleDict.items():
-                if j in [(a+1,b+1), (a+1,c+1),(a+1,d+1),(b+1,c+1),(b+1,d+1),(c+1,d+1)]:
-                    op+=v
-            popDict[s]=op
+            A,B,C,D = s
+            if len(set([A,B,C,D]))==4:
+                A,B,C,D=chemical_symbols[A],chemical_symbols[B],chemical_symbols[C],chemical_symbols[D]
+                comb4 = itertools.product(A,B,C,D)
+
+            elif len(set([A,B,C,D]))==1:
+                comb4=list(itertools.combinations(chemical_symbols[A],4))
+                if not comb4:
+                    temp = chemical_symbols[A]
+                    comb4 = list(itertools.product(temp,temp,temp,temp))
+
+            elif len(set([A,B,C,D]))==3:
+                ct = Counter([A,B,C,D])
+                dup,uniq = [],[]
+                for i,v in ct.items():
+                    if v==2:
+                        dup=chemical_symbols[i]
+                    else:
+                        uniq.append(chemical_symbols[i])
+                A = list(itertools.combinations(dup,2))
+                if not A:
+                    A = list(itertools.product(dup,dup))
+                B = list(itertools.product(*uniq))
+                comb4 = [(i,j,k,p) for i,j in A for k,p in B]
+
+            else:
+                ct = Counter([A,B,C,D])
+                if 3 in ct.values():
+                    keys = list(ct.keys())
+                    if ct[keys[0]]==1:
+                        keys[0],keys[1]=keys[1],keys[0]
+                    A = list(itertools.combinations(chemical_symbols[keys[0]],3))
+                    if not A:
+                        temp = chemical_symbols[keys[0]]
+                        A = list(itertools.product(temp,temp,temp))
+                    B = chemical_symbols[keys[1]]
+                    comb4 = [(i,j,k,p) for i,j,k in A for p in B]
+                else:
+                    keys = list(ct.keys())
+                    A = list(itertools.combinations(chemical_symbols[keys[0]],2))
+                    if not A:
+                        A = list(itertools.product(chemical_symbols[keys[0]],chemical_symbols[keys[0]]))
+                    B = list(itertools.combinations(chemical_symbols[keys[1]],2))
+                    if not B:
+                        B = list(itertools.product(chemical_symbols[keys[1]],chemical_symbols[keys[1]]))
+                    comb4 = [(i,j,k,p) for i,j in A for k,p in B]
+
+            for t in comb4:
+                op=0
+                a,b,c,d = t
+                for j,v in tupleDict.items():
+                    if j in [(a+1,b+1),(a+1,c+1),(a+1,d+1),(b+1,c+1),(b+1,d+1),(c+1,d+1)]:
+                        op+=v
+                popDict[t]=op
     return popDict
 
 def bond_order(iptpath):
