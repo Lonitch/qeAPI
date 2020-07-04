@@ -158,7 +158,7 @@ DEFAULTVAL = {
     'ELECTRONS':{ # convergence settings
         'startingpot':"atomic",
         'startingwfc':"atomic+random",
-        'mixing_beta':'0.2',
+        'mixing_beta':0.2,
         'conv_thr':1e-08,
         'diagonalization':'cg',
         'diago_thr_init':1e-06,
@@ -274,7 +274,7 @@ class qeIpt:
                 if isinstance(v,(list,tuple)):
                     for item in v:
                         temp+=n+'({})={},\n'.format(item[0],item[1])
-                elif isinstance(v, (int, float, complex)):
+                elif isinstance(v, (int, float, complex)) or (isinstance(v,str) and v.isnumeric()):
                     temp+="{}={},\n".format(n,v)
                 elif v in ['.TRUE.','.FALSE.']:
                     temp+="{}={},\n".format(n,v)
