@@ -79,6 +79,7 @@ for i in range(len(filelst)):
 			lb2+=1
 		elif lb!=0:
 			jobs.write('JOB_{}=`qsub -W depend=afterany:$JOB_{} {}`\n'.format(lb2,lb,filelst[i][j]))
+			lb2+=1
 	lb=lb2-1
 				
 jobs.close()
