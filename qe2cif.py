@@ -24,7 +24,7 @@ from os import path
 import numpy as np
 from ase.io import write
 from ase.atoms import Atoms
-from ase.calculators.singlepoint import (SinglePointDFTCalculator,
+from singlepoint import (SinglePointDFTCalculator,
                                          SinglePointKPoint)
 from ase.calculators.calculator import kpts2ndarray, kpts2sizeandoffsets
 from ase.dft.kpoints import kpoint_convert
@@ -44,6 +44,8 @@ _PW_CELL = 'CELL_PARAMETERS'
 _PW_POS = 'ATOMIC_POSITIONS'
 _PW_MAGMOM = 'Magnetic moment per site'
 _PW_FORCE = 'Forces acting on atoms'
+_PW_TOTFORCE = 'Total force'
+_PW_PRESSURE = 'total   stress'
 _PW_TOTEN = '!    total energy'
 _PW_STRESS = 'total   stress'
 _PW_FERMI = 'the Fermi energy is'
@@ -124,8 +126,10 @@ def read_espresso_out(fileobj, index=-1, results_required=True):
         _PW_POS: [],
         _PW_MAGMOM: [],
         _PW_FORCE: [],
+        _PW_TOTFORCE:[],
         _PW_TOTEN: [],
         _PW_STRESS: [],
+        _PW_PRESSURE: [],
         _PW_FERMI: [],
         _PW_HIGHEST_OCCUPIED: [],
         _PW_HIGHEST_OCCUPIED_LOWEST_FREE: [],
@@ -266,6 +270,19 @@ def read_espresso_out(fileobj, index=-1, results_required=True):
                     in pwo_lines[force_index:force_index + len(structure)]]
                 forces = np.array(forces) * units['Ry'] / units['Bohr']
 
+        # Total Force
+        totforce = None
+        for force_index in indexes[_PW_TOTFORCE]:
+            if image_index < force_index < next_index:
+                totforce = float(pwo_lines[force_index].split()[3])
+                totforce = totforce * units['Ry'] / units['Bohr']
+        
+        # Cell Pressure
+        pressure = None
+        for press_index in indexes[_PW_PRESSURE]:
+            if image_index < press_index < next_index:
+                pressure = float(pwo_lines[press_index].split()[-1])
+
         # Stress
         stress = None
         for stress_index in indexes[_PW_STRESS]:
@@ -380,8 +397,8 @@ def read_espresso_out(fileobj, index=-1, results_required=True):
                         kpts.append(kpt)
 
         # Put everything together
-        calc = SinglePointDFTCalculator(structure, energy=energy,
-                                        forces=forces, stress=stress,
+        calc = SinglePointDFTCalculator(structure, energy=energy, totforce=totforce,
+                                        forces=forces, stress=stress, pressure=pressure,
                                         magmoms=magmoms, efermi=efermi,
                                         ibzkpts=ibzkpts)
         calc.kpts = kpts
