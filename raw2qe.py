@@ -45,6 +45,11 @@ HEAD = """&CONTROL
 {}
 /
 
+&CELL
+cell_dynamics="bfgs",
+cell_dofree="all"
+/
+
 ATOMIC_SPECIES
 {}
 
