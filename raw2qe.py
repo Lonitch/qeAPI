@@ -193,7 +193,8 @@ class qeIpt:
             self.svpath = svpath
 
         if not prefix:
-            self.defaultval['CONTROL']['prefix'] = filname[:-4] # default prefix is just the file name without suffix.
+            temp = filname.split('//')[-1][:-4]
+            self.defaultval['CONTROL']['prefix'] = temp.split('\\')[-1]
         else:
             self.defaultval['CONTROL']['prefix'] = prefix
     
@@ -254,12 +255,12 @@ class qeIpt:
             self.defaultval['CONTROL']['outdir']=DEFAULTVAL['CONTROL']['outdir']+self.defaultval['CONTROL']['prefix']
 
     def delete_entry(self,entries):
-    # This function is used to delete entries in self.defaultval.
-    # the argument "entries" is a list of tuple with first and second element being panel name and option name
-    # respectively. For example, the commend below delete the 'input_dft' option in 'SYSTEM' panel
-    #
-    # obj.delete_entry([('SYSTEM','input_dft')])
-    # 
+        # This function is used to delete entries in self.defaultval.
+        # the argument "entries" is a list of tuple with first and second element being panel name and option name
+        # respectively. For example, the commend below delete the 'input_dft' option in 'SYSTEM' panel
+        #
+        # obj.delete_entry([('SYSTEM','input_dft')])
+        # 
 
         for a,b in entries:
             self.defaultval[a].pop(b,None)
