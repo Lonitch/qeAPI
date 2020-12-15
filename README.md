@@ -9,15 +9,15 @@ Some useful tools are listed here for preparing and analyzing DFT calculations u
 - `raw2qe.py`,a collection of functions and classes that transform CIF files into input texts.
 - `qe2cif.py`, a collection of functions that reads output files from QE calculations and write atomic configurations into CIF files
 - `qe2DDEC.py`, a collection of functions that reads charge density CUBE files, and analyze them using DDEC6 method to give bond order, and overlap population information of arbitrary atomic configurations.
-- `run_cases.pu` a script that prepare `PBS` files for individual calculations, and enforce the dependence among different kinds of jobs.
+- `run_cases.py` a script that prepare `PBS` files for individual calculations, and enforce the dependence among different kinds of jobs.
 
 And three **jupyter notebooks** are inluded to show some examples of using functions in the three script files:
 
-- `pWprep_test.ipynb` shows the use of `raw2qe.py`
+- `pWprep_test.ipynb` shows examples of using `raw2qe.py`
 
-- `qe2DDEC_test.ipynb` shows the use of `qe2DDEC.py`
+- `qe2DDEC_test.ipynb` shows examples of using `qe2DDEC.py`
 
-- `qe2cif_test.ipynb` shows the use of `qe2cif.py`
+- `qe2cif_test.ipynb` shows examples of using `qe2cif.py`
 
 The sections below are arranged as
 - [Install Python](#install-python)       
