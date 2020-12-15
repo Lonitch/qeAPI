@@ -4,13 +4,13 @@ import time
 import fileinput
 
 inbit = ''
-qe = ['mpirun  ./pw.x -npool 8 -in','mpirun ./dos.x -in', 'mpirun ./projwfc.x -in', 
+qe = ['mpirun  ./pw.x -npool 8 -in','./dos.x', './projwfc.x', 
 'mpirun ./pp.x -in']
 top = """#!/bin/bash
 #
 #!/bin/bash
-#PBS -l nodes=2:ppn=12
-#PBS -l walltime=01:00:00
+#PBS -l nodes=4:ppn=12
+#PBS -l walltime=03:00:00
 #PBS -N rlx
 #PBS -j oe
 #PBS -q eng-research
@@ -32,13 +32,13 @@ svpath = os.getcwd()
 os.chdir(svpath)
 jobs = open(os.path.join(svpath, depname), 'w')
 p = 0
-filelst = [[], [], [], [],[]]
+filelst = [[], [], [], [], [],[]]
 for file in glob.glob('*.in'):
 
 	with open(file, 'r') as f:
 		filedata = f.read()
 
-	# Replace some strings in your input files that you don't like(optional)
+	# Replace the target string
 	filedata = filedata.replace('"/u/sciteam/liu19/pseudo"', '"/home/sliu135/pseudo"')
 	filedata = filedata.replace('ibrav = 0','ibrav = 14')
 	filedata = filedata.replace('"/u/sciteam/liu19/scratch"', '"/home/sliu135/scratch/{}"'.format(file[:-3]))
@@ -50,20 +50,23 @@ for file in glob.glob('*.in'):
 	tempstr = file[:-3]+'.pbs'
 	if 'pdos' in tempstr:
 		qemachine=qe[2]
-		filelst[3].append(tempstr)
+		filelst[4].append(tempstr)
 	elif 'dos' in tempstr:
 		qemachine=qe[1]
-		filelst[2].append(tempstr)
+		filelst[3].append(tempstr)
 	elif 'nscf' in tempstr:
 		qemachine=qe[0]
-		filelst[1].append(tempstr)
+		filelst[2].append(tempstr)
 	elif 'pp' in tempstr:
 		qemachine=qe[3]
-		filelst[4].append(tempstr)
+		filelst[5].append(tempstr)
+	elif 'restart' in tempstr:
+		qemachine=qe[0]
+		filelst[1].append(tempstr)
 	else:
 		qemachine=qe[0]
 		filelst[0].append(tempstr)
-	content = top + '\n'
+	content = top + ' ' + file +'\n\n'
 	content = content + '{} {} > {}.out \n'.format(qemachine, file, file[:-3])
 	pbs = open(os.path.join(svpath,tempstr), 'w')
 	pbs.write(content)
@@ -71,7 +74,6 @@ for file in glob.glob('*.in'):
 
 lb=0
 lb2 =1
-## The jobs with pw.x is always run first, followed by jobs with dos.x, projwfc.x, and pp.x
 for i in range(len(filelst)):
 	for j in range(len(filelst[i])):
 		if lb==0:
