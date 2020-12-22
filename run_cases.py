@@ -9,8 +9,8 @@ qe = ['mpirun  ./pw.x -npool 8 -in','./dos.x', './projwfc.x',
 top = """#!/bin/bash
 #
 #!/bin/bash
-#PBS -l nodes=4:ppn=12
-#PBS -l walltime=03:00:00
+#PBS -l nodes={}:ppn={}
+#PBS -l walltime=0{}:{}:00
 #PBS -N rlx
 #PBS -j oe
 #PBS -q eng-research
@@ -33,14 +33,38 @@ os.chdir(svpath)
 jobs = open(os.path.join(svpath, depname), 'w')
 p = 0
 filelst = [[], [], [], [], [],[]]
-for file in glob.glob('*.in'):
+print('Tell me what\'s in the names of input files,the code will search files with "*string*.in"')
+iptformat=input('Type it here:')
+if iptformat=='':
+	iptformat='*.in'
+else:
+	iptformat='*'+iptformat+'*.in'
+print('tell me number of nodes and number of cores per node(<=20), separated by comma(default is 4,12)')
+nodeinfo = input('Type it here:')
+if nodeinfo=='':
+	ndnum,crnum=4,12
+else:
+	ndnum,crnum = nodeinfo.split(',')
+print('tell me the walltime you want to request,and separate hr and min using comma(<=4hrs, default is 3hr)')
+waltinfo = input('Type it here(e.g. 3,20):')
+if waltinfo=='':
+	hr,min = '3','00'
+else:
+	hr,min = waltinfo.split(',')
+	if int(hr)>4:
+		hr,min = '04','00'
+		print('hr exceeds 4, run with 4hrs instead')
+	elif int(min)<10:
+		min = '0'+min
+top = top.format(ndnum,crnum,hr,min)
+
+for file in glob.glob(iptformat):
 
 	with open(file, 'r') as f:
 		filedata = f.read()
 
 	# Replace the target string
 	filedata = filedata.replace('"/u/sciteam/liu19/pseudo"', '"/home/sliu135/pseudo"')
-	filedata = filedata.replace('ibrav = 0','ibrav = 14')
 	filedata = filedata.replace('"/u/sciteam/liu19/scratch"', '"/home/sliu135/scratch/{}"'.format(file[:-3]))
 
 	# Write the file out again
