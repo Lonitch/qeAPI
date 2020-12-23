@@ -11,6 +11,7 @@ from ase.io import write,read
 from ase.io import Trajectory
 from collections import Counter
 from copy import deepcopy
+from qe2cif import *
 import math
 import os
 
@@ -181,12 +182,19 @@ DEFAULTVAL = {
 # been adopted by many online database, such as material project.
 
 class qeIpt:
-    def __init__(self, path, filname,svpath=None,prefix=None):
+    def __init__(self, path='', filname=None,svpath=None,prefix=None,atoms=None):
         # path: where your cif file is.
         # filname: file name of your cif file.
+        # atoms: an ASE atoms object
         # svpath: path to where you want your QE input files stored,same as 'path' if not given.
         # prefix: the prefix for your calculation job, same as 'filname' if not given.
-        self.atoms=read(filename=os.path.join(path, filname))
+        if atoms:
+            self.atoms = atoms
+        else:
+            if path and filname:
+                self.atoms=read(filename=os.path.join(path, filname))
+            else:
+                print('Please tell me the file path and file name!!!')
         self.pw = HEAD
         self.pp = HEAD_rho
         self.dos = HEAD_dos
@@ -197,11 +205,16 @@ class qeIpt:
         else:
             self.svpath = svpath
 
-        if not prefix:
-            temp = filname.split('//')[-1][:-4]
-            self.defaultval['CONTROL']['prefix'] = temp.split('\\')[-1]
-        else:
+        
+        if prefix:
             self.defaultval['CONTROL']['prefix'] = prefix
+        elif atoms:
+            self.defaultval['CONTROL']['prefix'] = atoms.get_chemical_formula()
+        elif filname:
+            temp = os.path.split(filname)[-1][:-4]
+            self.defaultval['CONTROL']['prefix'] = temp
+        else:
+            print('You need to set defaultval["CONTROL"]["prefix"], NOW!!!')
     
     def scal_cell(self, scale): # expand or contract simulation box and scale atomic locations
         self.atoms.set_cell(self.atoms.get_cell()*scale)
@@ -228,6 +241,12 @@ class qeIpt:
         mass = Counter(self.atoms.get_masses())
         ntyp = len(atyp.keys())
         cellen = self.atoms.get_cell_lengths_and_angles()
+
+        # calculate number of bands (electronNum/2*0.5)
+        nbnd = 0
+        for k in atyp.keys():
+            nbnd+=read_atomInfo(k)['number']*atyp[k]
+        nbnd = int(nbnd/2*0.5)
         
         self.defaultval['SYSTEM']['nat']=nat
         self.defaultval['SYSTEM']['ntyp']=ntyp
@@ -237,6 +256,7 @@ class qeIpt:
         self.defaultval['SYSTEM']['cosAB'] = math.cos(cellen[3]/180*math.pi) 
         self.defaultval['SYSTEM']['cosAC'] = math.cos(cellen[4]/180*math.pi) 
         self.defaultval['SYSTEM']['cosBC'] = math.cos(cellen[5]/180*math.pi) 
+        self.defaultval['SYSTEM']['nbnd'] = nbnd
         
         for t,m in zip(atyp.keys(),mass.keys()):
             self.defaultval['ATOMIC_SPECIES'][t]=[m,t]
