@@ -264,16 +264,13 @@ class qeIpt:
         # update defaultval dict from customized dictionary
         for k in custom_dict.keys():
             self.defaultval[k].update(custom_dict[k])
-            if 'hubbard_u' in custom_dict[k].keys():
-                atyplst=list(atyp.keys())
-                self.defaultval[k]['hubbard_u']=[]
-                for item in custom_dict[k]['hubbard_u']:
-                    self.defaultval[k]['hubbard_u'].append((atyplst.index(item[0])+1,item[1]))
-            if 'starting_magnetization' in custom_dict[k].keys():
-                atyplst=list(atyp.keys())
-                self.defaultval[k]['starting_magnetization']=[]
-                for item in custom_dict[k]['starting_magnetization']:
-                    self.defaultval[k]['starting_magnetization'].append((atyplst.index(item[0])+1,item[1]))
+            if k=='SYSTEM':
+                for tk in ['hubbard_u','starting_magnetization','starting_charge']:
+                    if tk in custom_dict[k].keys():
+                        atyplst=list(atyp.keys())
+                        self.defaultval[k][tk]=[]
+                        for item in custom_dict[k][tk]:
+                            self.defaultval[k][tk].append((atyplst.index(item[0])+1,item[1]))
 
         # update prefix and outdir
         if self.defaultval['CONTROL']['prefix'] not in self.defaultval['CONTROL']['outdir']:
