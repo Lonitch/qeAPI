@@ -242,11 +242,11 @@ class qeIpt:
         ntyp = len(atyp.keys())
         cellen = self.atoms.get_cell_lengths_and_angles()
 
-        # calculate number of bands (electronNum/2*0.5)
+        # calculate number of bands (electronNum/2*1.5)
         nbnd = 0
         for k in atyp.keys():
             nbnd+=read_atomInfo(k)['number']*atyp[k]
-        nbnd = int(nbnd/2*0.5)
+        nbnd = int(nbnd/2*1.5)
         
         self.defaultval['SYSTEM']['nat']=nat
         self.defaultval['SYSTEM']['ntyp']=ntyp
