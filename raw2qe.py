@@ -499,12 +499,13 @@ DEFAULTVAL = {
 # been adopted by many online database, such as material project.
 
 class qeIpt:
-    def __init__(self, path='', filname=None,svpath=None,prefix=None,atoms=None):
+    def __init__(self, path='', filname=None,svpath=None,prefix=None, outdir=None,atoms=None):
         # path: where your cif file is.
         # filname: file name of your cif file.
         # atoms: an ASE atoms object
         # svpath: path to where you want your QE input files stored,same as 'path' if not given.
         # prefix: the prefix for your calculation job, same as 'filname' if not given.
+        # outdir: a path to the directory where the output data repository is stored.  
         if atoms:
             self.atoms = atoms
         else:
@@ -533,6 +534,9 @@ class qeIpt:
             self.defaultval['CONTROL']['prefix'] = temp
         else:
             print('You need to set defaultval["CONTROL"]["prefix"], NOW!!!')
+
+        if outdir:
+            self.defaultval['CONTROL']['outdir']=outdir
     
     def scal_cell(self, scale): # expand or contract simulation box and scale atomic locations
         self.atoms.set_cell(self.atoms.get_cell()*scale)
@@ -592,7 +596,8 @@ class qeIpt:
 
         # update prefix and outdir
         if self.defaultval['CONTROL']['prefix'] not in self.defaultval['CONTROL']['outdir']:
-            self.defaultval['CONTROL']['outdir']=DEFAULTVAL['CONTROL']['outdir']+self.defaultval['CONTROL']['prefix']
+            self.defaultval['CONTROL']['outdir']=os.path.join(self.defaultval['CONTROL']['outdir'],
+            self.defaultval['CONTROL']['prefix'])
 
     def delete_entry(self,entries):
         # This function is used to delete entries in self.defaultval.
@@ -656,13 +661,15 @@ class qeIpt:
             temp = self.defaultval['CONTROL']['prefix']+'_'+'band'+'.in'
             fn = open(os.path.join(self.svpath,temp), "w")
             prefix = self.defaultval['CONTROL']['prefix']
-            self.band = self.band.format(prefix,"./"+prefix,prefix)
+            outdir = self.defaultval['CONTROL']['outdir']
+            self.band = self.band.format(prefix,outdir,prefix)
             fn.write(self.band)
             fn.close()
 
 
-    # prepare input file for pp.x
-    def prep_ppipt(self, newEntries=None):
+    # prepare input file for pp.x, the "usrdir" is a path to the source data file,
+    # define "usrdir" when you moved your data file to a location different than the default path.
+    def prep_ppipt(self, usrdir=None, newEntries=None):
         # newEntries is a dictionary containing new features you want to add in your charge density calculation
         # The key of each entry is the feature name. For example, you can set up your charge density sampling 
         # grid by using
@@ -670,29 +677,45 @@ class qeIpt:
         #                'ny':400,
         #                'nz':400}
         prefix = self.defaultval['CONTROL']['prefix']
+
+        if usrdir:
+            outdir = usrdir
+        else:
+            outdir=self.defaultval['CONTROL']['outdir']
+
         if newEntries is None:
-            self.pp=self.pp.format(prefix,prefix,".",prefix, prefix,'')
+            self.pp=self.pp.format(prefix,prefix,outdir,prefix, prefix,'')
         else:
             newstr = ""
             for k,v in newEntries.items():
                 newstr+="   {}={}\n".format(k,v)
-            self.pp=self.pp.format(prefix,prefix,"./"+prefix,prefix, prefix,newstr)
+            self.pp=self.pp.format(prefix,prefix,outdir,prefix, prefix,newstr)
         fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_pp.in'), "w")
         fn.write(self.pp)
         fn.close()
 
     # prepare input file for dos.x
-    def prep_dosipt(self):
+    # define "usrdir" when you moved your data file to a location different than the default path.
+    def prep_dosipt(self,usrdir=None):
         prefix = self.defaultval['CONTROL']['prefix']
-        self.dos=self.dos.format(prefix,"./"+prefix,prefix)
+        if usrdir:
+            outdir = usrdir
+        else:
+            outdir=self.defaultval['CONTROL']['outdir']
+        self.dos=self.dos.format(prefix,outdir,prefix)
         fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_dos.in'), "w")
         fn.write(self.dos)
         fn.close()
 
     # prepare input file for projwfc.x
-    def prep_pdosipt(self):
+    # define "usrdir" when you moved your data file to a location different than the default path.
+    def prep_pdosipt(self,usrdir=None):
         prefix = self.defaultval['CONTROL']['prefix']
-        self.pdos=self.pdos.format(prefix,"./"+prefix,prefix)
+        if usrdir:
+            outdir = usrdir
+        else:
+            outdir=self.defaultval['CONTROL']['outdir']
+        self.pdos=self.pdos.format(prefix,outdir,prefix)
         fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_pdos.in'), "w")
         fn.write(self.pdos)
         fn.close()
