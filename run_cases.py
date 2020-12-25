@@ -5,7 +5,7 @@ import fileinput
 
 inbit = ''
 qe = ['mpirun  ./pw.x -npool 8 -in','./dos.x', './projwfc.x', 
-'mpirun ./pp.x -in']
+'mpirun ./pp.x -in','./bands.x -in']
 top = """#!/bin/bash
 #
 #!/bin/bash
@@ -13,7 +13,7 @@ top = """#!/bin/bash
 #PBS -l walltime=0{}:{}:00
 #PBS -N rlx
 #PBS -j oe
-#PBS -q eng-research
+#PBS -q {}
 
 module load python/3
 module load intel/18.0
@@ -32,61 +32,70 @@ svpath = os.getcwd()
 os.chdir(svpath)
 jobs = open(os.path.join(svpath, depname), 'w')
 p = 0
-filelst = [[], [], [], [], [],[]]
+filelst = [[], [], [], [], [], [], [], []]
 print('Tell me what\'s in the names of input files,the code will search files with "*string*.in"')
 iptformat=input('Type it here:')
 if iptformat=='':
-	iptformat='*.in'
+        iptformat='*.in'
 else:
-	iptformat='*'+iptformat+'*.in'
+        iptformat='*'+iptformat+'*.in'
+
 print('tell me number of nodes and number of cores per node(<=20), separated by comma(default is 4,12)')
 nodeinfo = input('Type it here:')
 if nodeinfo=='':
-	ndnum,crnum=4,12
+        ndnum,crnum=4,12
 else:
-	ndnum,crnum = nodeinfo.split(',')
+        ndnum,crnum = nodeinfo.split(',')
 print('tell me the walltime you want to request,and separate hr and min using comma(<=4hrs, default is 3hr)')
+
 waltinfo = input('Type it here(e.g. 3,20):')
 if waltinfo=='':
-	hr,min = '3','00'
+        hr,min = '3','00'
 else:
-	hr,min = waltinfo.split(',')
-	if int(hr)>4:
-		hr,min = '04','00'
-		print('hr exceeds 4, run with 4hrs instead')
-	elif int(min)<10:
-		min = '0'+min
-top = top.format(ndnum,crnum,hr,min)
+        hr,min = waltinfo.split(',')
+        if int(hr)>4:
+                hr,min = '04','00'
+                print('hr exceeds 4, run with 4hrs instead')
+        elif int(min)<10:
+                min = '0'+min
+
+quename = input('Tell me the queue name(default is beckman):')
+if quename=='':
+        quename = 'beckman'
+
+top = top.format(ndnum,crnum,hr,min,quename)
 
 for file in glob.glob(iptformat):
 
 	with open(file, 'r') as f:
 		filedata = f.read()
 
-	# Replace the target string
-	filedata = filedata.replace('"/u/sciteam/liu19/pseudo"', '"/home/sliu135/pseudo"')
-	filedata = filedata.replace('"/u/sciteam/liu19/scratch"', '"/home/sliu135/scratch/{}"'.format(file[:-3]))
-
 	# Write the file out again
 	with open(file, 'w') as f:
 		f.write(filedata)
-
+	# we run jobs in a sequence of '(vc-)rlx->restart->bands->band->nscf->dos->pdos->pp_rho'
 	tempstr = file[:-3]+'.pbs'
 	if 'pdos' in tempstr:
 		qemachine=qe[2]
-		filelst[4].append(tempstr)
+		filelst[6].append(tempstr)
 	elif 'dos' in tempstr:
 		qemachine=qe[1]
-		filelst[3].append(tempstr)
+		filelst[5].append(tempstr)
 	elif 'nscf' in tempstr:
 		qemachine=qe[0]
-		filelst[2].append(tempstr)
+		filelst[4].append(tempstr)
 	elif 'pp' in tempstr:
 		qemachine=qe[3]
-		filelst[5].append(tempstr)
+		filelst[7].append(tempstr)
 	elif 'restart' in tempstr:
 		qemachine=qe[0]
 		filelst[1].append(tempstr)
+	elif 'band' in tempstr and 'bands' not in tempstr:
+		qemachine=qe[-1]
+		filelst[3].append(tempstr)
+	elif 'bands' in tempstr:
+		qemachine=qe[0]
+		filelst[2].append(tempstr)
 	else:
 		qemachine=qe[0]
 		filelst[0].append(tempstr)
