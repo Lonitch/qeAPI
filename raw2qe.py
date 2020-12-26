@@ -643,7 +643,7 @@ class qeIpt:
         # The K-point scheme is supposed to be much denser than those for relax calc. The code below 
         elif self.defaultval['CONTROL']['calculation']=='nscf':
             cellen = self.atoms.get_cell_lengths_and_angles()[0]
-            kn = math.ceil(cellen/0.4)
+            kn = math.ceil(cellen/0.8)
             self.defaultval['K_POINTS']['x']=kn
             self.defaultval['K_POINTS']['y']=kn
             self.defaultval['K_POINTS']['z']=kn
