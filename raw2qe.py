@@ -537,6 +537,9 @@ class qeIpt:
 
         if outdir:
             self.defaultval['CONTROL']['outdir']=outdir
+        
+        ## Print prefix and outdir info
+        print("!!!Initiation info\n prefix:{}\n outdir:{}".format(self.defaultval['CONTROL']['prefix'], self.defaultval['CONTROL']['outdir']))
     
     def scal_cell(self, scale): # expand or contract simulation box and scale atomic locations
         self.atoms.set_cell(self.atoms.get_cell()*scale)
@@ -635,9 +638,22 @@ class qeIpt:
 
         if self.defaultval['CONTROL']['calculation']=='bands':
             fill+= ['crystal',HIGHSYM_KPOINTS]
+
+        # nscf calc is precursory calculation for dos/pdos and perturbative calc.
+        # The K-point scheme is supposed to be much denser than those for relax calc. The code below 
+        elif self.defaultval['CONTROL']['calculation']=='nscf':
+            cellen = self.atoms.get_cell_lengths_and_angles()[0]
+            kn = math.ceil(cellen/0.4)
+            self.defaultval['K_POINTS']['x']=kn
+            self.defaultval['K_POINTS']['y']=kn
+            self.defaultval['K_POINTS']['z']=kn
+            print('conduct nscf on a K-point scheme of {}*{}*{}'.format(kn,kn,kn))
+            kpvals = list(self.defaultval['K_POINTS'].values())
+            fill+=[kpvals[0],' '.join([str(item) for item in kpvals[1:]])]
+
         else:
             kpvals = list(self.defaultval['K_POINTS'].values())
-            fill+=[kpvals[0],''.join([str(item) for item in kpvals[1:]])]
+            fill+=[kpvals[0],' '.join([str(item) for item in kpvals[1:]])]
 
         attyp = self.atoms.get_chemical_symbols()
         atpos = self.atoms.get_positions()
@@ -702,6 +718,7 @@ class qeIpt:
             outdir = usrdir
         else:
             outdir=self.defaultval['CONTROL']['outdir']
+
         self.dos=self.dos.format(prefix,outdir,prefix)
         fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_dos.in'), "w")
         fn.write(self.dos)
@@ -715,6 +732,7 @@ class qeIpt:
             outdir = usrdir
         else:
             outdir=self.defaultval['CONTROL']['outdir']
+
         self.pdos=self.pdos.format(prefix,outdir,prefix)
         fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_pdos.in'), "w")
         fn.write(self.pdos)

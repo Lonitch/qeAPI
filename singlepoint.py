@@ -22,7 +22,8 @@ class SinglePointCalculator(Calculator):
             assert property in all_properties
             if value is None:
                 continue
-            if property in ['energy', 'totforce', 'pressure', 'magmom', 'free_energy']:
+            # changed by Sizhe
+            if property in ['energy', 'totforce', 'pressure','fermi', 'magmom', 'free_energy']:
                 self.results[property] = value
             else:
                 self.results[property] = np.array(value, float)

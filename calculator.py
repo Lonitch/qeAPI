@@ -111,7 +111,7 @@ def compare_atoms(atoms1, atoms2, tol=1e-15, excluded_properties=None):
     return system_changes
 
 
-all_properties = ['energy', 'totforce', 'forces', 'stress', 'pressure', 'stresses', 'dipole',
+all_properties = ['energy', 'totforce', 'forces', 'stress', 'pressure', 'stresses', 'efermi', 'dipole',
                   'charges', 'magmom', 'magmoms', 'free_energy', 'energies']
 
 
@@ -660,6 +660,12 @@ class Calculator(object):
 
     def get_stress(self, atoms=None):
         return self.get_property('stress', atoms)
+    # Changed by Sizhe
+    def get_totforce(self,atoms=None):
+        return self.get_property('totforce',atoms)
+    
+    def get_pressure(self,atoms=None):
+        return self.get_property('pressure',atoms)
 
     def get_stresses(self, atoms=None):
         return self.get_property('stresses', atoms)
