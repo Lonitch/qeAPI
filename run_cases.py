@@ -17,7 +17,7 @@ top = """#!/bin/bash
 
 module load python/3
 module load intel/18.0
-cd /home/sliu135/inputdir/
+cd {}
 
 # tell me what you are doing
 set -x
@@ -63,7 +63,7 @@ quename = input('Tell me the queue name(default is beckman):')
 if quename=='':
         quename = 'beckman'
 
-top = top.format(ndnum,crnum,hr,min,quename)
+top = top.format(ndnum,crnum,hr,min,quename,os.getcwd())
 
 for file in glob.glob(iptformat):
 

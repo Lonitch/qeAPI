@@ -8,7 +8,6 @@ Created by Sizhe @06/15/2020
 ## !!! The installation of ASE package is required to run the functions in this script
 import ase
 from ase.io import write,read
-from ase.io import Trajectory
 from collections import Counter
 from copy import deepcopy
 from qe2cif import *
@@ -421,7 +420,7 @@ HEAD_pdos="""&PROJWFC
 
 # HEAD_band includes a template that should be used with band.x. Like the DOS calculation, 
 # the "prefix" and "outdir" should match those in corresponding input files for pw.x
-# You can find functions for post-processing band data file in "qe2cif.py"
+# You can find functions for post-processing band data file in "qeplot.py"
 
 HEAD_band="""&BANDS
     prefix      = "{}",
@@ -431,6 +430,65 @@ HEAD_band="""&BANDS
 
 """
 
+# Below are input templates for phonon calculation using "ph.x". A workflow for phonon
+# calculation is (SCF with dense k-point scheme)->(calculate dynamic matrix using ph.x)->
+# ->(calculate force constants using q2r.x)->(calculate phonon frequency at a given list of q-vectors)
+
+HEAD_ph="""&inputph
+outdir = '{}'
+prefix = '{}',
+tr2_ph = 1.0d-14
+ldisp = .true.
+{}nq1 = {}, nq2 = {}, nq3 = {}
+fildyn = '{}.dyn'
+/
+
+"""
+
+HEAD_q2r = """&input
+fildyn = '{}.dyn'
+zasr = 'simple'
+flfrc = '{}.k{}.fc'
+/
+
+"""
+
+HEAD_disp = """&input
+asr = 'simple'
+{}flfrc = '{}.k{}.fc'
+flfrq = '{}.freq'
+q_in_band_form = .true. !integers in the list below show numbers of sampled points btw two K-points
+q_in_cryst_coord = .true. !K points in crystal unit
+/
+15 !Calculated by SeeK-path (https://www.materialscloud.org/work/tools/seekpath)
+  0.0000000000 0.0000000000 0.0000000000 20 !Γ 
+  0.5000000000 0.5000000000 0.5000000000 30 !R
+  -0.5000000000 -0.5000000000 -0.5000000000 30 !R'
+  0.0000000000 0.5000000000 0.5000000000 20 !T	
+  -0.0000000000 -0.5000000000 -0.5000000000 30 !T'
+  0.5000000000 0.0000000000 0.5000000000 20 !U
+  -0.5000000000 -0.0000000000 -0.5000000000 30 !U'
+  0.5000000000 0.5000000000 0.0000000000 20 !V
+  -0.5000000000 -0.5000000000 -0.0000000000 20 !V'
+  0.5000000000 0.0000000000 0.0000000000 10 !X
+  -0.5000000000 -0.0000000000 -0.0000000000 10 !X'
+  0.0000000000 0.5000000000 0.0000000000 10 !Y
+  -0.0000000000 -0.5000000000 -0.0000000000 10 !Y'
+  0.0000000000 0.0000000000 0.5000000000 10 !Z
+  -0.0000000000 -0.0000000000 -0.5000000000 5 !Z'
+
+"""
+
+HEAD_phdos ="""&input
+asr = 'simple'
+dos = .true.
+{}
+flfrc = '{}.k{}.fc'
+fldos = '{}.phdos'
+nk1=50, nk2=50, nk3=50
+/
+
+"""
 # DEFAULTVAL is a two-layer dictionary for default values where the top layer corresponds to the names of 
 # different control panels, e.g."CONTROL" and "ATOMIC_POSITIONS". The bottom layer corresponds to specific 
 # default value for each option in each control panel. To check default value for a specific option, simply 
@@ -518,6 +576,10 @@ class qeIpt:
         self.dos = HEAD_dos
         self.pdos = HEAD_pdos
         self.band = HEAD_band
+        self.ph = HEAD_ph
+        self.phdos = HEAD_phdos
+        self.q2r = HEAD_q2r
+        self.disp = HEAD_disp
         self.defaultval = deepcopy(DEFAULTVAL)
         if not svpath:
             self.svpath = path
@@ -682,7 +744,6 @@ class qeIpt:
             fn.write(self.band)
             fn.close()
 
-
     # prepare input file for pp.x, the "usrdir" is a path to the source data file,
     # define "usrdir" when you moved your data file to a location different than the default path.
     def prep_ppipt(self, usrdir=None, newEntries=None):
@@ -736,5 +797,50 @@ class qeIpt:
         self.pdos=self.pdos.format(prefix,outdir,prefix)
         fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_pdos.in'), "w")
         fn.write(self.pdos)
+        fn.close()
+
+    def prep_phipt(self,usrdir=None):
+        print('Input for SCF calc with dense K point scheme is also prepared!')
+        self.defaultval['CONTROL']['calculation']='scf'
+        a = self.atoms.get_cell_lengths_and_angles()[0]
+        kn = math.ceil(a/0.8)
+        self.defaultval['K_POINTS']['x']=kn
+        self.defaultval['K_POINTS']['y']=kn
+        self.defaultval['K_POINTS']['z']=kn
+        print('conduct nscf on a K-point scheme of {}*{}*{}'.format(kn,kn,kn))
+        if usrdir is not None:
+            self.defaultval['CONTROL']['outdir']=usrdir
+        print('outdir:{}'.format(self.defaultval['CONTROL']['outdir']))
+        self.prep_pwipt()
+        masses = ""
+        for i,v in enumerate(self.defaultval['ATOMIC_SPECIES'].items()):
+            masses+="amass({})={},\n".format(i+1,v[-1][0])
+
+        qn = int(kn/3*2)
+        prefix = self.defaultval['CONTROL']['prefix']
+        outdir = self.defaultval['CONTROL']['outdir']
+
+        temp = self.defaultval['CONTROL']['prefix']+'_'+'ph'+'.in'
+        fn = open(os.path.join(self.svpath,temp), "w")
+        self.ph = self.ph.format(outdir,prefix,masses,qn,qn,qn,prefix)
+        fn.write(self.ph)
+        fn.close()
+
+        temp = self.defaultval['CONTROL']['prefix']+'_'+'q2r'+'.in'
+        fn = open(os.path.join(self.svpath,temp), "w")
+        self.q2r = self.q2r.format(prefix,prefix,qn)
+        fn.write(self.q2r)
+        fn.close()
+
+        temp = self.defaultval['CONTROL']['prefix']+'_'+'disp'+'.in'
+        fn = open(os.path.join(self.svpath,temp), "w")
+        self.disp = self.disp.format(masses,prefix,qn,prefix)
+        fn.write(self.disp)
+        fn.close()
+
+        temp = self.defaultval['CONTROL']['prefix']+'_'+'phdos'+'.in'
+        fn = open(os.path.join(self.svpath,temp), "w")
+        self.phdos = self.ph.format(masses,prefix,qn,prefix)
+        fn.write(self.phdos)
         fn.close()
 
