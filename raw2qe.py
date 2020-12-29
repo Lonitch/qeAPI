@@ -395,25 +395,23 @@ HEAD_rho="""&inputpp
 # identical values to make final results consistent.
 
 HEAD_dos ="""&DOS
-prefix="{}",
-outdir="{}",
-fildos='{}_dos.dat',
-emax=30,
-emin=-30,
-deltae=0.05,
-degauss=1.00000e-02
+    prefix='{}',
+    outdir='{}',
+    fildos='{}.dos.dat',
+    emin=-15,
+    emax=35
 /
 
 """
 
 HEAD_pdos="""&PROJWFC
-prefix="{}",
-outdir="{}",
-filpdos='{}_pdos',
-degauss=1.00000e-02,
-emax=30,
-emin=-30,
-deltae=0.01
+    prefix='{}',
+    outdir='{}',
+    fildos='{}_pdos',
+    degauss=1.00000e-02,
+    emax=30,
+    emin=-30,
+    deltae=0.01
 /
 
 """

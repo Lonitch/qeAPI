@@ -75,7 +75,7 @@ In this section we provide a way to compile Quantum Espresso on normal universit
 ### Without libxc
 - Create a folder `dft` in your `home` folder 
 - Enter new folder `cd dft`
-- Download newest QE package [here](https://github.com/QEF/q-e/releases/tag/qe-6.4) to your personal computer, then upload the downloaded `tar.gz` file to `dft` folder using **FileZilla** or similar software.
+- Download newest QE package [here](https://github.com/QEF/q-e/releases) to your personal computer, then upload the downloaded `tar.gz` file to `dft` folder using **FileZilla** or similar software.
 - Run `tar -xvf qe-XXXX.tgz` to unzip the source files in `dft\qe-X.Y.Z` where `X`,`Y`, and `Z` are version numbers.
 - Load required compiling modules by 
 `module load gcc`

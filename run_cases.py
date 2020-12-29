@@ -60,13 +60,16 @@ if quename=='':
 
 top = top.format(ndnum,crnum,hr,mn,quename,os.getcwd())
 
+WINDOWS_LINE_ENDING = b'\r\n'
+UNIX_LINE_ENDING = b'\n'
+
 for file in glob.glob(iptformat):
 
-	with open(file, 'r') as f:
+	with open(file, 'rb') as f:
 		filedata = f.read()
-
+	filedata.replace(WINDOWS_LINE_ENDING, UNIX_LINE_ENDING)
 	# Write the file out again
-	with open(file, 'w') as f:
+	with open(file, 'wb') as f:
 		f.write(filedata)
 	# we run jobs in a sequence of '(vc-)rlx->restart->bands->band->nscf->dos->pdos->pp_rho'
 	tempstr = file[:-3]+'.sbatch'
