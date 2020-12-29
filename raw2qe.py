@@ -803,7 +803,7 @@ class qeIpt:
         print('Input for SCF calc with dense K point scheme is also prepared!')
         self.defaultval['CONTROL']['calculation']='scf'
         a = self.atoms.get_cell_lengths_and_angles()[0]
-        kn = math.ceil(a/0.8)
+        kn = math.floor(a/0.8)
         self.defaultval['K_POINTS']['x']=kn
         self.defaultval['K_POINTS']['y']=kn
         self.defaultval['K_POINTS']['z']=kn

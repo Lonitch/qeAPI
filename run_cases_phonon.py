@@ -9,21 +9,16 @@ inbit = ''
 qe = ['mpirun  ./pw.x -npool 8 -in','mpirun  ./ph.x -npool 8 -in',
 'mpirun  ./q2r.x -npool 8 -in','mpirun  ./matdyn.x -npool 8 -in']
 top = """#!/bin/bash
-#
-#!/bin/bash
-#PBS -l nodes={}:ppn={}
-#PBS -l walltime=0{}:{}:00
-#PBS -N rlx
-#PBS -j oe
-#PBS -q {}
-#PBS -p {}
+#SBATCH --nodes={}
+#SBATCH --ntasks-per-node={}
+#SBATCH --time=0{}:{}:00
+#SBATCH --job-name="phonon"
+#SBATCH --partition={}
+
 
 module load python/3
 module load intel/18.0
 cd {}
-
-# tell me what you are doing
-set -x
 
 # make a private copy of the potentials in the RAM disk
 # aprun -n8 -N1 cp -a /home/$USER/pseudo /dev/shm/pseudo
@@ -66,11 +61,11 @@ quename = input('Tell me the queue name(default is beckman):')
 if quename=='':
     quename = 'beckman'
 
-partition = input('Tell me the partition id(1-primary/2-secondary, default is 2):')
-if partition=='1':
-    partition = 'primary'
-else:
-    partition = 'secondary'
+#partition = input('Tell me the partition id(1-primary/2-secondary, default is 2):')
+#if partition=='1':
+#    partition = 'primary'
+#else:
+#    partition = 'secondary'
 
 retag = input('Do you want to add restart file?(y/n):')
 if retag=='y' or retag=='Y':
@@ -85,18 +80,18 @@ if retag=='y' or retag=='Y':
         f.write(content)
         f.close()
 
-top = top.format(ndnum,crnum,hr,mn,quename,partition,os.getcwd())
+top = top.format(ndnum,crnum,hr,mn,quename,os.getcwd())
 
 for file in glob.glob(iptformat):
 
-	with open(file, 'r',encoding='utf8',errors='ignore') as f:
+	with open(file, 'r',encoding='utf8',errors='replace') as f:
 		filedata = f.read()
 
 	# Write the file out again
 	with open(file, 'w') as f:
 		f.write(filedata)
 	# we run jobs in a sequence of 'scf->ph->q2r->matdyn'
-	tempstr = file[:-3]+'.pbs'
+	tempstr = file[:-3]+'.sbatch'
 	if 'scf' in tempstr:
 		qemachine=qe[0]
 		filelst[0].append(tempstr)
@@ -120,14 +115,27 @@ for file in glob.glob(iptformat):
 
 
 lb2 = int(100+random.random()*1000)
+initflg = list(map(bool, filelst)).index(True)
 for i in range(len(filelst)):
+	if len(filelst[i]):
+		initflg+=1
 	for j in range(len(filelst[i])):
-		if i==0:
-			jobs.write('JOB_{}=`qsub {}`\n'.format(lb2, filelst[i][j]))
-			lb2+=1
+		if initflg==i:
+			if 'restart' in filelst[i][j]:
+				jobs.write('JOB_{}=`sbatch --array 1-10 {}`\n'.format(lb2,filelst[i][j]))
+				sys.exit()
+			else:
+				jobs.write('JOB_{}=`sbatch {} |cut -f 4 -d " "`\n'.format(lb2, filelst[i][j]))
+				lb2+=1
 		else:
-			jobs.write('JOB_{}=`qsub -W depend=afterany:$JOB_{} {}`\n'.format(lb2,lb2-1,filelst[i][j]))
+			jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,lb2-1,filelst[i][j]))
 			lb2+=1
-				
+			if 'restart' in filelst[i][j]:
+				repnum = input('how many times do you wanna restart it?(1<=x<=10):')
+				if int(repnum)>1:
+					print('workflow stops at "restart job"!')
+					jobs.write('JOB_{}=`sbatch --array 1-{} --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,int(repnum),lb2-1,filelst[i][j]))
+					sys.exit()
+			lb2+=1	
 jobs.close()
 os.chmod(depname, stat.S_IRWXU)

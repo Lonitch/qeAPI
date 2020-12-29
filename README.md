@@ -1,5 +1,7 @@
 # Python-QE API
 
+>**Update @12/28**: due to the change of system environment on campuscluster, `run_cases.py` and `run_cases_phonon.py` are updated for submitting jobs to SLURM batch system.
+
 >**Update @12/22**: add interactive commands in `run_cases.py` to ask users if they want to change information of node number, core number per node, and walltime in `.pbs` file.
 
 >**Update @ 12/15**: (1) edited the "singlePointCalculator" class in qe2cif.py, enabling it reading total force and cell pressure; (2) updated "run_cases.py" so that 'restart' input file can also be submitted to computing platform.
@@ -11,7 +13,8 @@ Some useful tools are listed here for preparing and analyzing DFT calculations u
 - `raw2qe.py`,a collection of functions and classes that transform CIF files into input texts.
 - `qe2cif.py`, a collection of functions that reads output files from QE calculations and write atomic configurations into CIF files
 - `qe2DDEC.py`, a collection of functions that reads charge density CUBE files, and analyze them using DDEC6 method to give bond order, and overlap population information of arbitrary atomic configurations.
-- `run_cases.py` a script that prepare `PBS` files for individual calculations, and enforce the dependence among different kinds of jobs.
+- `run_cases.py` a script that prepare `sbatch` files for individual calculations, and enforce the dependence among different kinds of jobs using `pw.x`,`pp.x`,`bands.x`,`dos.x`, and `pdos.x`.
+- `run_cases_phonon.py` a script that prepare `sbatch` files for individual calculations, and enforce the dependence among different kinds of jobs using `pw.x`,`ph.x`,`matdyn.x`,and `q2r.x`.
 
 And three **jupyter notebooks** are inluded to show some examples of using functions in the three script files:
 
