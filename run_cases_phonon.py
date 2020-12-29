@@ -117,8 +117,6 @@ for file in glob.glob(iptformat):
 lb2 = int(100+random.random()*1000)
 initflg = list(map(bool, filelst)).index(True)
 for i in range(len(filelst)):
-	if len(filelst[i]):
-		initflg+=1
 	for j in range(len(filelst[i])):
 		if initflg==i:
 			if 'restart' in filelst[i][j]:
@@ -136,6 +134,5 @@ for i in range(len(filelst)):
 					print('workflow stops at "restart job"!')
 					jobs.write('JOB_{}=`sbatch --array 1-{} --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,int(repnum),lb2-1,filelst[i][j]))
 					sys.exit()
-			lb2+=1	
 jobs.close()
 os.chmod(depname, stat.S_IRWXU)
