@@ -3,7 +3,7 @@ import glob,random
 
 
 inbit = ''
-qe = ['mpirun  ./pw.x -npool 8 -in','./dos.x', './projwfc.x', 
+qe = ['mpirun  ./pw.x -npool 8 -in','./dos.x -in', './projwfc.x -in', 
 'mpirun ./pp.x -in','./bands.x -in']
 top = """#!/bin/bash
 #SBATCH --nodes={}

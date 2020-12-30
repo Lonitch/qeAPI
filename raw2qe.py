@@ -398,8 +398,9 @@ HEAD_dos ="""&DOS
     prefix='{}',
     outdir='{}',
     fildos='{}.dos.dat',
-    emin=-15,
-    emax=35
+    emin=-35,
+    emax=35,
+    deltae=0.01
 /
 
 """
