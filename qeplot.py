@@ -282,7 +282,7 @@ def pdosplot(pdospath,ax,dospath=None,nscfpath=None,orbital=None,tag='pdos_atm',
         return
 
     # prepare color
-    clrs = plt.get_cmap("coolwarm",len(list(pdos.keys())))
+    clrs = plt.get_cmap(cm,len(list(pdos.keys())))
     for i,k in enumerate(list(pdos.keys())):
         if totcol>3:
             ax.plot(pdos[k][:,0]-fermi,pdos[k][:,1],color=clrs(i),linewidth=lw)

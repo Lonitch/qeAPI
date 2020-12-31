@@ -11,7 +11,7 @@ qe = ['mpirun  ./pw.x -npool 8 -in','mpirun  ./ph.x -npool 8 -in',
 top = """#!/bin/bash
 #SBATCH --nodes={}
 #SBATCH --ntasks-per-node={}
-#SBATCH --time=0{}:{}:00
+#SBATCH --time={}:{}:00
 #SBATCH --job-name="phonon"
 #SBATCH --partition={}
 
@@ -48,13 +48,12 @@ print('tell me the walltime you want to request,and separate hr and min using co
 
 waltinfo = input('Type it here(e.g. 3,20):')
 if waltinfo=='':
-    hr,mn = '3','00'
+    hr,mn = '03','00'
 else:
     hr,mn = waltinfo.split(',')
-    if int(hr)>4:
-        hr,mn = '04','00'
-        print('hr exceeds 4, run with 4hrs instead')
-    elif int(mn)<10:
+    if int(hr)<10:
+        hr='0'+hr
+    if int(mn)<10:
         mn = '0'+mn
 
 quename = input('Tell me the queue name(default is beckman):')
@@ -107,6 +106,9 @@ for file in glob.glob(iptformat):
 	elif 'disp' in tempstr:
 		qemachine=qe[3]
 		filelst[5].append(tempstr)
+	else:
+		print('Cannot recognize {}'.format(tempstr))
+		continue
 	content = top + ' ' + file +'\n\n'
 	content = content + '{} {} > {}.out \n'.format(qemachine, file, file[:-3])
 	pbs = open(os.path.join(svpath,tempstr), 'w')
@@ -120,8 +122,14 @@ for i in range(len(filelst)):
 	for j in range(len(filelst[i])):
 		if initflg==i:
 			if 'restart' in filelst[i][j]:
-				jobs.write('JOB_{}=`sbatch --array 1-10 {}`\n'.format(lb2,filelst[i][j]))
-				sys.exit()
+				repnum = input('how many times do you wanna restart it?(default is 1):')
+				if repnum=='' or repnum=='1':
+					jobs.write('JOB_{}=`sbatch {} |cut -f 4 -d " "`\n'.format(lb2, filelst[i][j]))
+					lb2+=1
+				elif int(repnum)>1:
+					print('"restart job" is sent into a job array, might cause running error!')
+					jobs.write('JOB_{}=`sbatch --array 1-{} --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,int(repnum),lb2-1,filelst[i][j]))
+					lb2+=1
 			else:
 				jobs.write('JOB_{}=`sbatch {} |cut -f 4 -d " "`\n'.format(lb2, filelst[i][j]))
 				lb2+=1
@@ -129,10 +137,13 @@ for i in range(len(filelst)):
 			jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,lb2-1,filelst[i][j]))
 			lb2+=1
 			if 'restart' in filelst[i][j]:
-				repnum = input('how many times do you wanna restart it?(1<=x<=10):')
-				if int(repnum)>1:
-					print('workflow stops at "restart job"!')
+				repnum = input('how many times do you wanna restart it?(default is 1):')
+				if repnum=='' or repnum=='1':
+					continue
+				else:
+					print('"restart job" is sent into a job array, might cause running error!')
 					jobs.write('JOB_{}=`sbatch --array 1-{} --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,int(repnum),lb2-1,filelst[i][j]))
-					sys.exit()
+					lb2+=1
+
 jobs.close()
 os.chmod(depname, stat.S_IRWXU)
