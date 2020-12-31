@@ -8,7 +8,7 @@ qe = ['mpirun  ./pw.x -npool 8 -in','./dos.x -in', './projwfc.x -in',
 top = """#!/bin/bash
 #SBATCH --nodes={}
 #SBATCH --ntasks-per-node={}
-#SBATCH --time=0{}:{}:00
+#SBATCH --time={}:{}:00
 #SBATCH --job-name="rlx"
 #SBATCH --partition={}
 
@@ -31,32 +31,31 @@ filelst = [[], [], [], [], [], [], [], []]
 print('Tell me what\'s in the names of input files,the code will search files with "*string*.in"')
 iptformat=input('Type it here:')
 if iptformat=='':
-        iptformat='*.in'
+    iptformat='*.in'
 else:
-        iptformat='*'+iptformat+'*.in'
+    iptformat='*'+iptformat+'*.in'
 
-print('tell me number of nodes and number of cores per node(<=20), separated by comma(default is 4,12)')
+print('tell me number of nodes(<=8) and number of cores per node(<=20), separated by comma(default is 4,12)')
 nodeinfo = input('Type it here:')
 if nodeinfo=='':
-        ndnum,crnum=4,12
+    ndnum,crnum=4,12
 else:
-        ndnum,crnum = nodeinfo.split(',')
+    ndnum,crnum = nodeinfo.split(',')
 print('tell me the walltime you want to request,and separate hr and min using comma(<=4hrs, default is 3hr)')
 
 waltinfo = input('Type it here(e.g. 3,20):')
 if waltinfo=='':
-        hr,mn = '3','00'
+    hr,mn = '3','00'
 else:
-        hr,mn = waltinfo.split(',')
-        if int(hr)>4:
-                hr,mn = '04','00'
-                print('hr exceeds 4, run with 4hrs instead')
-        elif int(mn)<10:
-                mn = '0'+mn
+	hr,mn = waltinfo.split(',')
+	if int(hr)<10:
+		hr='0'+hr
+	if int(mn)<10:
+		mn = '0'+mn
 
 quename = input('Tell me the queue name(default is beckman):')
 if quename=='':
-        quename = 'beckman'
+    quename = 'beckman'
 
 top = top.format(ndnum,crnum,hr,mn,quename,os.getcwd())
 

@@ -38,7 +38,7 @@ if iptformat=='':
 else:
     iptformat='*'+iptformat+'*.in'
 
-print('tell me number of nodes and number of cores per node(<=20), separated by comma(default is 4,12)')
+print('tell me number of nodes (<=8) and number of cores per node(<=20), separated by comma(default is 4,12)')
 nodeinfo = input('Type it here:')
 if nodeinfo=='':
     ndnum,crnum=4,12
