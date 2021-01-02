@@ -488,6 +488,83 @@ nk1=50, nk2=50, nk3=50
 /
 
 """
+
+HEAD_gw="""&gw_input
+  title = 'GW band structure for {}.'
+
+  ! config of the scf run
+  prefix         = '{}'
+  outdir         = '{}'
+
+  ! the grid used for the linear response
+  kpt_grid       = 4, 4, 4
+  qpt_grid       = 4, 4, 4
+
+  ! number of bands for which the GW correction is calculated
+  num_band       = 8
+
+  ! configuration of W in the convolution
+  max_freq_coul  = 200
+  num_freq_coul  = 51
+
+  ! configuration for the correlation self energy
+  ecut_corr      = 6.0
+
+  ! configuration for the exchange self energy
+  ecut_exch      = 15.0
+/
+
+&gw_output
+  directory = '{}'
+  file_gw   = '{}gw_band.dat'
+/
+
+FREQUENCIES
+35
+  0.0    0.0
+  0.0    0.3
+  0.0    0.9
+  0.0    1.8
+  0.0    3.0
+  0.0    4.5
+  0.0    6.3
+  0.0    8.4
+  0.0   10.8
+  0.0   13.5
+  0.0   16.5
+  0.0   19.8
+  0.0   23.4
+  0.0   27.3
+  0.0   31.5
+  0.0   36.0
+  0.0   40.8
+  0.0   45.9
+  0.0   51.3
+  0.0   57.0
+  0.0   63.0
+  0.0   69.3
+  0.0   75.9
+  0.0   82.8
+  0.0   90.0
+  0.0   97.5
+  0.0  105.3
+  0.0  113.4
+  0.0  121.8
+  0.0  130.5
+  0.0  139.5
+  0.0  148.8
+  0.0  158.4
+  0.0  168.3
+  0.0  178.5
+/
+
+K_points
+{}
+{}
+/
+
+"""
+
 # DEFAULTVAL is a two-layer dictionary for default values where the top layer corresponds to the names of 
 # different control panels, e.g."CONTROL" and "ATOMIC_POSITIONS". The bottom layer corresponds to specific 
 # default value for each option in each control panel. To check default value for a specific option, simply 
@@ -843,3 +920,18 @@ class qeIpt:
         fn.write(self.phdos)
         fn.close()
 
+    def prep_gwipt(self,kpoints,directory='/home/sliu135/bands'):
+        prefix = self.defaultval['CONTROL']['prefix']
+        outdir=self.defaultval['CONTROL']['outdir']
+
+        temp=HEAD_gw.format(prefix,prefix,outdir,directory,prefix,len(kpoints.split('\n')),kpoints)
+        fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_gw.in'), "w")
+        fn.write(temp)
+        fn.close()
+        temp = self.defaultval['CONTROL']['prefix']+'_'+'band'+'.in'
+        fn = open(os.path.join(self.svpath,temp), "w")
+        prefix = self.defaultval['CONTROL']['prefix']
+        outdir = self.defaultval['CONTROL']['outdir']
+        self.band = self.band.format(prefix,outdir,prefix)
+        fn.write(self.band)
+        fn.close()

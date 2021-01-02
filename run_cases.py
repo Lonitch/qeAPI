@@ -4,7 +4,7 @@ import glob,random
 
 inbit = ''
 qe = ['mpirun  ./pw.x -npool 8 -in','./dos.x -in', './projwfc.x -in', 
-'mpirun ./pp.x -in','./bands.x -in']
+'mpirun ./pp.x -in','./bands.x -in','./gw.x -in']
 top = """#!/bin/bash
 #SBATCH --nodes={}
 #SBATCH --ntasks-per-node={}
@@ -70,7 +70,7 @@ for file in glob.glob(iptformat):
 	# Write the file out again
 	with open(file, 'wb') as f:
 		f.write(filedata)
-	# we run jobs in a sequence of '(vc-)rlx->restart->bands->band->nscf->dos->pdos->pp_rho'
+	# we run jobs in a sequence of '(vc-)rlx->restart->bands/gw->band->nscf->dos->pdos->pp_rho'
 	tempstr = file[:-3]+'.sbatch'
 	if 'pdos' in tempstr:
 		qemachine=qe[2]
@@ -88,10 +88,13 @@ for file in glob.glob(iptformat):
 		qemachine=qe[0]
 		filelst[1].append(tempstr)
 	elif 'band' in tempstr and 'bands' not in tempstr:
-		qemachine=qe[-1]
+		qemachine=qe[4]
 		filelst[3].append(tempstr)
-	elif 'bands' in tempstr:
-		qemachine=qe[0]
+	elif 'bands' in tempstr or 'gw' in tempstr:
+		if 'gw' in tempstr:
+			qemachine = qe[5]
+		else:
+			qemachine=qe[0]
 		filelst[2].append(tempstr)
 	else:
 		qemachine=qe[0]
