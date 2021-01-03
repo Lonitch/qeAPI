@@ -7,8 +7,9 @@ Created by Sizhe @06/15/2020
 
 ## !!! The installation of ASE package is required to run the functions in this script
 import ase
+import numpy as np
 from ase.io import write,read
-from collections import Counter
+from collections import Counter,defaultdict
 from copy import deepcopy
 from qe2cif import *
 import math
@@ -384,9 +385,30 @@ HEAD_rho="""&inputpp
 	iflag = 3
 	output_format = 6
 	fileout = '{}.cube'
-{}
 /
 
+"""
+
+# qeIpt class will be using the following template to prepare input files for visualizing 
+# HOCO/LUCO orbitals.
+HEAD_orb="""&inputpp
+	prefix = "{}",
+	filplot = "{}.orbital",
+	plot_num = 7,
+	outdir = "{}",
+    kpoint = 1, !plot orbital calculated at gamma point
+    kband = {},
+    ! lsign = .TRUE. ! use this to plot negative+positive part of wfc, usually for molecules
+/
+
+&plot
+	nfile = 1,
+	filepp(1) = "{}.orbital",
+	weight(1) = 1.0,
+	iflag = 3,
+	output_format = 6,
+	fileout = '{}.cube'
+/
 """
 
 # HEAD_dos/pdos includes an input file template that should be used for the calculations with dos.x/projwfc.x.
@@ -434,30 +456,30 @@ HEAD_band="""&BANDS
 # ->(calculate force constants using q2r.x)->(calculate phonon frequency at a given list of q-vectors)
 
 HEAD_ph="""&inputph
-outdir = '{}'
-prefix = '{}',
-tr2_ph = 1.0d-14
-ldisp = .true.
-{}nq1 = {}, nq2 = {}, nq3 = {}
-fildyn = '{}.dyn'
+    outdir = '{}'
+    prefix = '{}',
+    tr2_ph = 1.0d-14
+    ldisp = .true.
+    {}nq1 = {}, nq2 = {}, nq3 = {}
+    fildyn = '{}.dyn'
 /
 
 """
 
 HEAD_q2r = """&input
-fildyn = '{}.dyn'
-zasr = 'simple'
-flfrc = '{}.k{}.fc'
+    fildyn = '{}.dyn'
+    zasr = 'simple'
+    flfrc = '{}.k{}.fc'
 /
 
 """
 
 HEAD_disp = """&input
-asr = 'simple'
-{}flfrc = '{}.k{}.fc'
-flfrq = '{}.freq'
-q_in_band_form = .true. !integers in the list below show numbers of sampled points btw two K-points
-q_in_cryst_coord = .true. !K points in crystal unit
+    asr = 'simple'
+    {}flfrc = '{}.k{}.fc'
+    flfrq = '{}.freq'
+    q_in_band_form = .true. !integers in the list below show numbers of sampled points btw two K-points
+    q_in_cryst_coord = .true. !K points in crystal unit
 /
 15 !Calculated by SeeK-path (https://www.materialscloud.org/work/tools/seekpath)
   0.0000000000 0.0000000000 0.0000000000 20 !Γ 
@@ -479,12 +501,12 @@ q_in_cryst_coord = .true. !K points in crystal unit
 """
 
 HEAD_phdos ="""&input
-asr = 'simple'
-dos = .true.
-{}
-flfrc = '{}.k{}.fc'
-fldos = '{}.phdos'
-nk1=50, nk2=50, nk3=50
+    asr = 'simple'
+    dos = .true.
+    {}
+    flfrc = '{}.k{}.fc'
+    fldos = '{}.phdos'
+    nk1=50, nk2=50, nk3=50
 /
 
 """
@@ -647,6 +669,8 @@ class qeIpt:
                 self.atoms=read(filename=os.path.join(path, filname))
             else:
                 print('Please tell me the file path and file name!!!')
+        self.atsymb = self.atoms.get_chemical_symbols()
+        self.atpos = self.atoms.get_positions()
         self.pw = HEAD
         self.pp = HEAD_rho
         self.dos = HEAD_dos
@@ -665,8 +689,8 @@ class qeIpt:
         
         if prefix:
             self.defaultval['CONTROL']['prefix'] = prefix
-        elif atoms:
-            self.defaultval['CONTROL']['prefix'] = atoms.get_chemical_formula()
+        # elif atoms:
+        #     self.defaultval['CONTROL']['prefix'] = atoms.get_chemical_formula()
         elif filname:
             temp = os.path.split(filname)[-1][:-4]
             self.defaultval['CONTROL']['prefix'] = temp
@@ -692,6 +716,10 @@ class qeIpt:
                 mass[i] = typ_val[a]
         self.atoms.set_masses(mass)
     
+    # build a supercell based on self.atoms
+    def build_supercell(self, s=3, wrap=False):
+        self.atoms=ase.build.make_supercell(self.atoms, np.array([[s, 0, 0], [0, s, 0], [0, 0, s]]),wrap=wrap)
+
     def check_bravais(self):
         c=self.atoms.get_cell()
         bravais = c.get_bravais_lattice().name
@@ -704,6 +732,11 @@ class qeIpt:
         mass = Counter(self.atoms.get_masses())
         ntyp = len(atyp.keys())
         cellen = self.atoms.get_cell_lengths_and_angles()
+        self.atsymb = self.atoms.get_chemical_symbols()
+        self.atpos = self.atoms.get_positions()
+        indices = defaultdict(list)
+        for i,v in enumerate(self.atsymb):
+            indices[v].append(i)
 
         # calculate number of bands (electronNum/2*1.5)
         nbnd = 0
@@ -728,12 +761,30 @@ class qeIpt:
         for k in custom_dict.keys():
             self.defaultval[k].update(custom_dict[k])
             if k=='SYSTEM':
-                for tk in ['hubbard_u','starting_magnetization','starting_charge']:
+                for tk in ['hubbard_u','starting_magnetization']:
                     if tk in custom_dict[k].keys():
                         atyplst=list(atyp.keys())
                         self.defaultval[k][tk]=[]
                         for item in custom_dict[k][tk]:
                             self.defaultval[k][tk].append((atyplst.index(item[0])+1,item[1]))
+                # add starting charge on specific atoms in a large configuration/supercell
+                if 'starting_charge' in custom_dict[k].keys():
+                    self.defaultval['SYSTEM']['starting_charge']=[]
+                    if isinstance(custom_dict[k]['starting_charge'],list):
+                        for item in custom_dict[k]['starting_charge']:
+                            s,c,u = item #symbol, charge, which unit cell
+                            self.defaultval['SYSTEM']['ntyp']+=1
+                            # the atom with charge will be renamed as "X1" with X being atomic symbol
+                            self.defaultval['ATOMIC_SPECIES'][s+'1']=[read_atomInfo(s)['atomic_mass'],s]
+                            self.defaultval['SYSTEM']['starting_charge'].append((self.defaultval['SYSTEM']['ntyp'],c))
+                            self.atsymb[indices[s][u-1]]=s+'1'
+                    elif isinstance(custom_dict[k]['starting_charge'],tuple):
+                        s,c,u = custom_dict[k]['starting_charge']
+                        self.defaultval['SYSTEM']['ntyp']+=1
+                        # the atom with charge will be renamed as "X1" with X being atomic symbol
+                        self.defaultval['ATOMIC_SPECIES'][s+'1']=[read_atomInfo(s)['atomic_mass'],s]
+                        self.defaultval['SYSTEM']['starting_charge'].append((self.defaultval['SYSTEM']['ntyp'],c))
+                        self.atsymb[indices[s][u-1]]=s+'1'
 
         # update prefix and outdir
         if self.defaultval['CONTROL']['prefix'] not in self.defaultval['CONTROL']['outdir']:
@@ -791,12 +842,13 @@ class qeIpt:
 
         else:
             kpvals = list(self.defaultval['K_POINTS'].values())
-            fill+=[kpvals[0],' '.join([str(item) for item in kpvals[1:]])]
+            if kpvals[0] in ['Gamma','gamma','GAMMA']:
+                fill+=[kpvals[0],' ']
+            else:
+                fill+=[kpvals[0],' '.join([str(item) for item in kpvals[1:]])]
 
-        attyp = self.atoms.get_chemical_symbols()
-        atpos = self.atoms.get_positions()
         poslst = ""
-        for p,n in zip(atpos,attyp):
+        for p,n in zip(self.atpos,self.atsymb):
             poslst+="{} {} {} {}\n".format(n,p[0],p[1],p[2])
         fill.append(poslst)
 
@@ -822,13 +874,11 @@ class qeIpt:
 
     # prepare input file for pp.x, the "usrdir" is a path to the source data file,
     # define "usrdir" when you moved your data file to a location different than the default path.
-    def prep_ppipt(self, usrdir=None, newEntries=None):
-        # newEntries is a dictionary containing new features you want to add in your charge density calculation
-        # The key of each entry is the feature name. For example, you can set up your charge density sampling 
-        # grid by using
-        # newEntries = { 'nx':400,
-        #                'ny':400,
-        #                'nz':400}
+    def prep_ppipt(self, usrdir=None, tag='charge',pseudoval=None):
+        # `tag` specifies the type of calculation, for now, only 'charge' and 'HOCO'/'LUCO' are implemented.
+        # 'charge' calculates charge distribution
+        # 'HOCO' calculates highest occupied crystal orbital
+        # 'LUCO' calculates lowest occupied crystal orbital
         prefix = self.defaultval['CONTROL']['prefix']
 
         if usrdir:
@@ -836,16 +886,30 @@ class qeIpt:
         else:
             outdir=self.defaultval['CONTROL']['outdir']
 
-        if newEntries is None:
-            self.pp=self.pp.format(prefix,prefix,outdir,prefix, prefix,'')
+        if tag=='charge':
+            self.pp=self.pp.format(prefix,prefix,outdir,prefix, prefix)
+            fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_pp.in'), "w")
+            fn.write(self.pp)
+            fn.close()
         else:
-            newstr = ""
-            for k,v in newEntries.items():
-                newstr+="   {}={}\n".format(k,v)
-            self.pp=self.pp.format(prefix,prefix,outdir,prefix, prefix,newstr)
-        fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_pp.in'), "w")
-        fn.write(self.pp)
-        fn.close()
+            if pseudoval is None:
+                print('please tell me electron numbers of each atomic type, according to your pseudopotential file!')
+                return
+            nbnd = 0
+            atyp = Counter(self.atoms.get_chemical_symbols())
+            for k in pseudoval.keys():
+                nbnd+=pseudoval[k]*atyp[k]
+            nbnd = int(nbnd/2) # !!! assuming no degeneracy
+            if tag in ['HOCO','hoco']:
+                self.pp = HEAD_orb.format(prefix,prefix+'_hoco',outdir,nbnd,prefix+'_hoco',prefix+'_hoco')
+                fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_hoco_pp.in'), "w")
+                fn.write(self.pp)
+                fn.close()
+            elif tag in ['LUCO','luco']:
+                self.pp = HEAD_orb.format(prefix,prefix+'_luco',outdir,nbnd+1,prefix+'_luco',prefix+'_luco')
+                fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_luco_pp.in'), "w")
+                fn.write(self.pp)
+                fn.close()
 
     # prepare input file for dos.x
     # define "usrdir" when you moved your data file to a location different than the default path.
@@ -920,6 +984,7 @@ class qeIpt:
         fn.write(self.phdos)
         fn.close()
 
+    # prepare input file for Sternheimer GW band calculation using gw.x in qe-6.3
     def prep_gwipt(self,kpoints,directory='/home/sliu135/bands'):
         prefix = self.defaultval['CONTROL']['prefix']
         outdir=self.defaultval['CONTROL']['outdir']
