@@ -1,0 +1,7 @@
+JOB_626=`sbatch C:\Users\liu_s\Desktop\CODE\qeAPI\NaTi2(PO4)3_rlx.sbatch |cut -f 4 -d " "`
+JOB_627=`sbatch C:\Users\liu_s\Desktop\CODE\qeAPI\newprefix_scf.sbatch |cut -f 4 -d " "`
+JOB_628=`sbatch --dependency=afterany:$JOB_627 C:\Users\liu_s\Desktop\CODE\qeAPI\newprefix_nscf.sbatch |cut -f 4 -d " "`
+JOB_629=`sbatch --dependency=afterany:$JOB_628 C:\Users\liu_s\Desktop\CODE\qeAPI\newprefix_dos.sbatch |cut -f 4 -d " "`
+JOB_630=`sbatch --dependency=afterany:$JOB_629 C:\Users\liu_s\Desktop\CODE\qeAPI\newprefix_pdos.sbatch |cut -f 4 -d " "`
+JOB_631=`sbatch --dependency=afterany:$JOB_630 C:\Users\liu_s\Desktop\CODE\qeAPI\NaTi2(PO4)3_pp.sbatch |cut -f 4 -d " "`
+JOB_632=`sbatch --dependency=afterany:$JOB_631 C:\Users\liu_s\Desktop\CODE\qeAPI\newprefix_pp.sbatch |cut -f 4 -d " "`

@@ -1,15 +1,26 @@
+"""
+This script prepare files for submitting QE calculation jobs to a high-performance computational
+platform running on "slurm" system, and having python3 and intel LAPACK installed. 
+
+!!!Please change the tring "top" if the platform environment you have access to is slightly different.
+
+Currently, this script prepares job files for scf/nscf/relax/bands/dos/pdos/charge density/gw calcs.
+
+Created by Sizhe Liu @University of Illinois at Urbana-Champaign
+"""
+
 import os, sys, stat
 import glob,random
 
 
 inbit = ''
-qe = ['mpirun  ./pw.x -npool 8 -in','./dos.x -in', './projwfc.x -in', 
-'mpirun ./pp.x -in','./bands.x -in','./gw.x -in']
+qe = ['mpirun  ./pw.x -npool {} -in','./dos.x -in', './projwfc.x -in', 
+'mpirun ./pp.x -in','./bands.x -in','mpirun -np {} ./gw.x -npool {} -nimage {} -in']
 top = """#!/bin/bash
 #SBATCH --nodes={}
 #SBATCH --ntasks-per-node={}
 #SBATCH --time={}:{}:00
-#SBATCH --job-name="rlx"
+#SBATCH --job-name="bands"
 #SBATCH --partition={}
 
 
@@ -41,8 +52,10 @@ if nodeinfo=='':
     ndnum,crnum=4,12
 else:
     ndnum,crnum = nodeinfo.split(',')
-print('tell me the walltime you want to request,and separate hr and min using comma(<=4hrs, default is 3hr)')
+    ndnum = int(ndnum)
+    crnum = int(crnum)
 
+print('tell me the walltime you want to request,and separate hr and min using comma(<=4hrs, default is 3hr)')
 waltinfo = input('Type it here(e.g. 3,20):')
 if waltinfo=='':
     hr,mn = '3','00'
@@ -62,14 +75,16 @@ top = top.format(ndnum,crnum,hr,mn,quename,os.getcwd())
 WINDOWS_LINE_ENDING = b'\r\n'
 UNIX_LINE_ENDING = b'\n'
 
-for file in glob.glob(iptformat):
+for file in glob.glob(os.path.join(os.getcwd(),iptformat)):
 
 	with open(file, 'rb') as f:
 		filedata = f.read()
 	filedata.replace(WINDOWS_LINE_ENDING, UNIX_LINE_ENDING)
+	f.close()
 	# Write the file out again
 	with open(file, 'wb') as f:
 		f.write(filedata)
+	f.close()
 	# we run jobs in a sequence of '(vc-)rlx->restart->bands/gw->band->nscf->dos->pdos->pp_rho'
 	tempstr = file[:-3]+'.sbatch'
 	if 'pdos' in tempstr:
@@ -79,28 +94,95 @@ for file in glob.glob(iptformat):
 		qemachine=qe[1]
 		filelst[5].append(tempstr)
 	elif 'nscf' in tempstr:
-		qemachine=qe[0]
+		with open(file, 'r') as f:
+			filedata = f.readlines()
+		f.close()
+		p = 0
+		while p< len(filedata):
+			if 'K_POINTS' in filedata[p]:
+				t1,t2 = filedata[p].split()
+				if t2 in ['gamma','Gamma','GAMMA']:
+					qemachine=qe[0].format(1)
+				else:
+					k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
+					np = int(k1)*int(k2)*int(k3)
+					while crnum*ndnum%np!=0:
+						np = np//2
+					qemachine=qe[0].format(np)
+				p+=len(filedata)
+			p+=1
 		filelst[4].append(tempstr)
 	elif 'pp' in tempstr:
 		qemachine=qe[3]
 		filelst[7].append(tempstr)
 	elif 'restart' in tempstr:
-		qemachine=qe[0]
+		with open(file, 'r') as f:
+			filedata = f.readlines()
+		f.close()
+		p = 0
+		while p < len(filedata):
+			if 'K_POINTS' in filedata[p]:
+				t1,t2 = filedata[p].split()
+				if t2 in ['gamma','Gamma','GAMMA']:
+					qemachine=qe[0].format(1)
+				else:
+					k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
+					np = int(k1)*int(k2)*int(k3)
+					while crnum*ndnum%np!=0:
+						np = np//2
+					qemachine=qe[0].format(np)
+				p+=len(filedata)
+			p+=1
 		filelst[1].append(tempstr)
 	elif 'band' in tempstr and 'bands' not in tempstr:
 		qemachine=qe[4]
 		filelst[3].append(tempstr)
 	elif 'bands' in tempstr or 'gw' in tempstr:
 		if 'gw' in tempstr:
-			qemachine = qe[5]
+			if ndnum*crnum%8!=0:
+				print('!!!number of processors should be multiple of 8!!!')
+				continue
+			qemachine = qe[5].format(ndnum*crnum,8,ndnum*crnum//8)
 		else:
-			qemachine=qe[0]
+			with open(file, 'r') as f:
+				filedata = f.readlines()
+			f.close()
+			p = 0
+			while p < len(filedata):
+				if 'K_POINTS' in filedata[p]:
+					t1,t2 = filedata[p].split()
+					if t2 in ['gamma','Gamma','GAMMA']:
+						qemachine=qe[0].format(1)
+					else:
+						k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
+						np = int(k1)*int(k2)*int(k3)
+						while crnum*ndnum%np!=0:
+							np = np//2
+						qemachine=qe[0].format(np)
+					p+=len(filedata)
+				p+=1
 		filelst[2].append(tempstr)
 	else:
-		qemachine=qe[0]
+		with open(file, 'r') as f:
+			filedata = f.readlines()
+		f.close()
+		p = 0
+		while p < len(filedata):
+			if 'K_POINTS' in filedata[p]:
+				t1,t2 = filedata[p].split()
+				if t2 in ['gamma','Gamma','GAMMA']:
+					qemachine=qe[0].format(1)
+				else:
+					k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
+					np = int(k1)*int(k2)*int(k3)
+					while crnum*ndnum%np!=0:
+						np = np//2
+					qemachine=qe[0].format(np)
+				p+=len(filedata)
+			p+=1
 		filelst[0].append(tempstr)
 	
-	content = top + ' ' + file +'\n\n'
+	content = top + ' ' +'\n\n'
 	content = content + '{} {} > {}.out \n'.format(qemachine, file, file[:-3])
 	pbs = open(os.path.join(svpath,tempstr), 'w')
 	pbs.write(content)

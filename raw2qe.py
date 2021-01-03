@@ -1,14 +1,21 @@
 """
 This file contains the functions and classes that can be used to produce standardized input files 
-for Quantum Espresso from CIF files.
-
+for Quantum Espresso from CIF files/ASE atom objects.
 Created by Sizhe @06/15/2020
+
+Available Functionalities in qeIpt class:
+    (1) set up control options that can be undertood by pw.x
+    (2) prepare input files for SCF/nSCF/(vc-)relax calculations 
+    (3) prepare input files for band structure/DOS/PDOS calculations
+    (4) prepare input files for GW calculations using SternheimerGW code
+    (5) prepare input files for charge density/HOCO/LUCO calculation using pp.x
+
 """
 
 ## !!! The installation of ASE package is required to run the functions in this script
 import ase
 import numpy as np
-from ase.io import write,read
+from ase.io import read
 from collections import Counter,defaultdict
 from copy import deepcopy
 from qe2cif import *
@@ -31,34 +38,34 @@ IBRAV = {'CUB':1,'FCC':2,'BCC':3,'RHL':4,'TET':6,'BCT':7,'ORC':8,'ORCC':9,
 # SCF calculation).
 
 HEAD = """&CONTROL
-{}
+ {}
 /
 
 &SYSTEM
-{}
+ {}
 /
 
 &ELECTRONS
-{}
+ {}
 /
 
 &IONS
-{}
+ {}
 /
 
 &CELL
-cell_dynamics="bfgs",
-cell_dofree="all"
+ cell_dynamics="bfgs",
+ cell_dofree="all"
 /
 
 ATOMIC_SPECIES
-{}
+ {}
 
 K_POINTS {}
-{}
+ {}
 
 ATOMIC_POSITIONS angstrom
-{}
+ {}
 
 """
 
