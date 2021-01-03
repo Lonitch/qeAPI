@@ -75,7 +75,7 @@ top = top.format(ndnum,crnum,hr,mn,quename,os.getcwd())
 WINDOWS_LINE_ENDING = b'\r\n'
 UNIX_LINE_ENDING = b'\n'
 
-for file in glob.glob(os.path.join(os.getcwd(),iptformat)):
+for file in glob.glob(iptformat):
 
 	with open(file, 'rb') as f:
 		filedata = f.read()
@@ -87,6 +87,8 @@ for file in glob.glob(os.path.join(os.getcwd(),iptformat)):
 	f.close()
 	# we run jobs in a sequence of '(vc-)rlx->restart->bands/gw->band->nscf->dos->pdos->pp_rho'
 	tempstr = file[:-3]+'.sbatch'
+	# tell me which files are found and will be generated!
+	print("{}:{}".format(file,tempstr))
 	if 'pdos' in tempstr:
 		qemachine=qe[2]
 		filelst[6].append(tempstr)
