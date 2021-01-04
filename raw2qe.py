@@ -38,19 +38,19 @@ IBRAV = {'CUB':1,'FCC':2,'BCC':3,'RHL':4,'TET':6,'BCT':7,'ORC':8,'ORCC':9,
 # SCF calculation).
 
 HEAD = """&CONTROL
- {}
+{}
 /
 
 &SYSTEM
- {}
+{}
 /
 
 &ELECTRONS
- {}
+{}
 /
 
 &IONS
- {}
+{}
 /
 
 &CELL
@@ -59,13 +59,13 @@ HEAD = """&CONTROL
 /
 
 ATOMIC_SPECIES
- {}
+{}
 
 K_POINTS {}
- {}
+{}
 
 ATOMIC_POSITIONS angstrom
- {}
+{}
 
 """
 
@@ -399,22 +399,22 @@ HEAD_rho="""&inputpp
 # qeIpt class will be using the following template to prepare input files for visualizing 
 # HOCO/LUCO orbitals.
 HEAD_orb="""&inputpp
-	prefix = "{}",
-	filplot = "{}.orbital",
-	plot_num = 7,
-	outdir = "{}",
-    kpoint = 1, !plot orbital calculated at gamma point
-    kband = {},
-    ! lsign = .TRUE. ! use this to plot negative+positive part of wfc, usually for molecules
+ prefix = "{}",
+ filplot = "{}.orbital",
+ plot_num = 7,
+ outdir = "{}",
+ kpoint = 1, !plot orbital calculated at gamma point
+ kband = {},
+ ! lsign = .TRUE. ! use this to plot negative+positive part of wfc, usually for molecules
 /
 
 &plot
-	nfile = 1,
-	filepp(1) = "{}.orbital",
-	weight(1) = 1.0,
-	iflag = 3,
-	output_format = 6,
-	fileout = '{}.cube'
+ nfile = 1,
+ filepp(1) = "{}.orbital",
+ weight(1) = 1.0,
+ iflag = 3,
+ output_format = 6,
+ fileout = '{}.cube'
 /
 """
 
@@ -725,12 +725,45 @@ class qeIpt:
     
     # build a supercell based on self.atoms
     def build_supercell(self, s=3, wrap=False):
-        self.atoms=ase.build.make_supercell(self.atoms, np.array([[s, 0, 0], [0, s, 0], [0, 0, s]]),wrap=wrap)
+        if isinstance(s,int):
+            mtx = np.array([[s, 0, 0], [0, s, 0], [0, 0, s]])
+        elif isinstance(s,list) or isinstance(s,np.ndarray):
+            mtx = np.array([[s[0], 0, 0], [0, s[1], 0], [0, 0, s[2]]])
+        else:
+            raise Exception('wrong type')
+        self.atoms=ase.build.make_supercell(self.atoms, mtx,wrap=wrap)
 
     def check_bravais(self):
         c=self.atoms.get_cell()
         bravais = c.get_bravais_lattice().name
         self.defaultval['SYSTEM']['ibrav']=IBRAV[bravais]
+
+    def set_pseudo_name(self,pseudolst=None):
+        if pseudolst is None:
+            raise Exception('Give me the list of tuples in a format of ("symbol","name")!!!')
+        else:
+            for item in pseudolst:
+                self.defaultval['ATOMIC_SPECIES'][item[0]]=[read_atomInfo(item[0])['atomic_mass'],item[1]]
+
+    def nbnd_from_pseudo(self,pseudolst=None):
+        if not isinstance(pseudolst,list) and not isinstance(pseudolst,dict):
+            raise Exception('Give me the list of tuples in a format of ("symbol",int) or a dictionary!!!')
+        elif isinstance(pseudolst,list) and not all(isinstance(item, tuple) and len(item)==2 for item in pseudolst):
+            raise Exception('Give me the list of tuples in a format of ("symbol",int) or a dictionary!!!')
+        else:
+            nbnd = 0
+            if isinstance(pseudolst,list):
+                tempdir = dict(pseudolst)
+            else:
+                tempdir = pseudolst
+            atyp = Counter(self.atoms.get_chemical_symbols())
+            for k in atyp.keys():
+                if k in tempdir.keys():
+                    nbnd+=tempdir[k]*atyp[k]
+                else:
+                    nbnd+=read_atomInfo(k)['number']*atyp[k]
+            self.defaultval['SYSTEM']['nbnd']=int(nbnd/2+20)
+
 
     def update_default(self, custom_dict={}):
         # note that type_val must also be a two-layer dictionary. but no need to include all the control panel.
@@ -745,11 +778,11 @@ class qeIpt:
         for i,v in enumerate(self.atsymb):
             indices[v].append(i)
 
-        # calculate number of bands (electronNum/2*1.5)
+        # calculate number of bands (electronNum/2*1.4)
         nbnd = 0
         for k in atyp.keys():
             nbnd+=read_atomInfo(k)['number']*atyp[k]
-        nbnd = int(nbnd/2*1.5)
+        nbnd = int(nbnd/2*1.4)
         
         self.defaultval['SYSTEM']['nat']=nat
         self.defaultval['SYSTEM']['ntyp']=ntyp
@@ -762,7 +795,7 @@ class qeIpt:
         self.defaultval['SYSTEM']['nbnd'] = nbnd
         
         for t,m in zip(atyp.keys(),mass.keys()):
-            self.defaultval['ATOMIC_SPECIES'][t]=[m,t]
+            self.defaultval['ATOMIC_SPECIES'][t]=[m,t+'.upf']
 
         # update defaultval dict from customized dictionary
         for k in custom_dict.keys():
@@ -785,6 +818,12 @@ class qeIpt:
                             self.defaultval['ATOMIC_SPECIES'][s+'1']=[read_atomInfo(s)['atomic_mass'],s]
                             self.defaultval['SYSTEM']['starting_charge'].append((self.defaultval['SYSTEM']['ntyp'],c))
                             self.atsymb[indices[s][u-1]]=s+'1'
+                            # set hubbard_U and starting magnetization params for charged atoms if possible
+                            atypidx=list(atyp.keys()).index(s)+1
+                            for tk in ['hubbard_u','starting_magnetization']:
+                                tempdic = dict(self.defaultval['SYSTEM'][tk])
+                                if atypidx in list(tempdic.keys()):
+                                    self.defaultval['SYSTEM'][tk].append((self.defaultval['SYSTEM']['ntyp'],tempdic[atypidx]))
                     elif isinstance(custom_dict[k]['starting_charge'],tuple):
                         s,c,u = custom_dict[k]['starting_charge']
                         self.defaultval['SYSTEM']['ntyp']+=1
@@ -792,6 +831,12 @@ class qeIpt:
                         self.defaultval['ATOMIC_SPECIES'][s+'1']=[read_atomInfo(s)['atomic_mass'],s]
                         self.defaultval['SYSTEM']['starting_charge'].append((self.defaultval['SYSTEM']['ntyp'],c))
                         self.atsymb[indices[s][u-1]]=s+'1'
+                        # set hubbard_U and starting magnetization params for charged atoms if possible
+                        atypidx=list(atyp.keys()).index(s)+1
+                        for tk in ['hubbard_u','starting_magnetization']:
+                            tempdic = dict(self.defaultval['SYSTEM'][tk])
+                            if atypidx in list(tempdic.keys()):
+                                self.defaultval['SYSTEM'][tk].append((self.defaultval['SYSTEM']['ntyp'],tempdic[atypidx]))
 
         # update prefix and outdir
         if self.defaultval['CONTROL']['prefix'] not in self.defaultval['CONTROL']['outdir']:
@@ -829,7 +874,7 @@ class qeIpt:
 
         atom_species=''
         for n,v in self.defaultval['ATOMIC_SPECIES'].items():
-            atom_species+='{},{},{}.upf\n'.format(n,v[0],v[1])
+            atom_species+='{},{},{}\n'.format(n,v[0],v[1])
         fill.append(atom_species)
 
         if self.defaultval['CONTROL']['calculation']=='bands':
