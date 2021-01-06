@@ -5,8 +5,7 @@ Created by Sizhe @12/25/2020
 """
 
 from re import sub
-import ase
-from ase.io import write,read
+from fractions import Fraction
 from qe2cif import *
 import math,os,glob
 import pandas as pd
@@ -30,8 +29,8 @@ def bndplot(datafile=None,scffile=None,symmetryfile=None,bdpath=None,scfpath=Non
     """
     Params:
         datafile: path+filename for band data file (dat.gnu)
-        scffile: path +filename for the result of scf/nscf calc
-        symmfile: path +filename for output file of bands.x calc
+        scffile: path+filename for the result of scf/nscf calc
+        symmfile: path+filename for output file of bands.x calc
         ! using the following args if none of above is provided !
         bdpath: path to the results of bands calc, where you store `xx.dat.gnu` and `xx_band.out`,
                 for definitions of these two files, please check the comments in `raw2qe.py`.
@@ -203,12 +202,14 @@ def dosplot(ax,dospath=None,datafile=None,tag='_dos',fermi=None,xrange=15,lw=2):
     ax.set_xlabel(r'$E-E_{Fermi}$')
     ax.set_ylabel('DOS(states/eV)')
 
-def pdosplot(pdospath,ax,dospath=None,nscfpath=None,orbital=None,tag='pdos_atm',cm='coolwarm',xrange=10,lw=2):
+def pdosplot(pdospath,ax,dospath=None,nscfpath=None,orbital=None,fermi=None,
+            tag='pdos_atm',cm='coolwarm',xrange=10,lw=2):
     """
     Params:
         pdospath: a path to where pdos results are stored
         dospath: a path to where dos data is stored in which we find fermi energy level
         nscfpath: a path to where nscf output file is stored in which we can find fermi energy level
+        fermi: fermi energy level, if given, file search is avoided.
         cm: color map for plotting multiple curves 
         ax, tag, xrange: same as in dosplot function
         orbital: a dictionary/string that tells how the function
@@ -219,44 +220,57 @@ def pdosplot(pdospath,ax,dospath=None,nscfpath=None,orbital=None,tag='pdos_atm',
                      for instance, [('Na','2p'),('Fe','3d')].
     """
     # First find fermi energy level
-    if dospath is None and nscfpath is None:
+    if dospath is None and nscfpath is None and fermi is None:
         print('tell me where to find fermi energy level!!!')
         return
+    if isinstance(fermi,float):
+        pass
     elif nscfpath is None:
-        datafiles = glob.glob(os.path.join(dospath,'*_dos.dat'))
-        if len(datafiles)>1:
-            print('tell me which file you want using:')
-            for i,f in enumerate(datafiles):
-                print("{}. {}\n".format(i,f))
-            idx = int(input('Type it here:'))
-            datafile = datafiles[idx]
-        elif not datafiles:
-            print('No DOS dat file found!!!')
-            return
-        else:
-            datafile = datafiles[0]
+        try:
+            with open(dospath,'r') as f:
+                fermi = f.readlines()[0]
+            fermi = float(fermi.split()[-2])
+            f.close()
+        except:
+            datafiles = glob.glob(os.path.join(dospath,'*_dos.dat'))
+            if len(datafiles)>1:
+                print('tell me which file you want using:')
+                for i,f in enumerate(datafiles):
+                    print("{}. {}\n".format(i,f))
+                idx = int(input('Type it here:'))
+                datafile = datafiles[idx]
+            elif not datafiles:
+                print('No DOS dat file found!!!')
+                return
+            else:
+                datafile = datafiles[0]
 
-        with open(datafile,'r') as f:
-            fermi = f.readlines()[0]
-        fermi = float(fermi.split()[-2])
-        f.close()
+            with open(datafile,'r') as f:
+                fermi = f.readlines()[0]
+            fermi = float(fermi.split()[-2])
+            f.close()
     else:
-        datafiles = glob.glob(os.path.join(nscfpath,'*_nscf.out'))
-        if len(datafiles)>1:
-            print('tell me which file you want using:')
-            for i,f in enumerate(datafiles):
-                print("{}. {}\n".format(i,f))
-            idx = int(input('Type it here:'))
-            datafile = datafiles[idx]
-        elif not datafiles:
-            print('No nscf output file found!!!')
-            return
-        else:
-            datafile = datafiles[0]
+        try:
+            with open(nscfpath,'r') as f:
+                content = f.readlines()
+            f.close()
+        except:
+            datafiles = glob.glob(os.path.join(nscfpath,'*_nscf.out'))
+            if len(datafiles)>1:
+                print('tell me which file you want using:')
+                for i,f in enumerate(datafiles):
+                    print("{}. {}\n".format(i,f))
+                idx = int(input('Type it here:'))
+                datafile = datafiles[idx]
+            elif not datafiles:
+                print('No nscf output file found!!!')
+                return
+            else:
+                datafile = datafiles[0]
 
-        with open(datafile,'r') as f:
-            content = f.readlines()
-        f.close()
+            with open(datafile,'r') as f:
+                content = f.readlines()
+            f.close()
 
         fermi,i = None,80
         while i <len(content):
@@ -336,11 +350,145 @@ def pdosplot(pdospath,ax,dospath=None,nscfpath=None,orbital=None,tag='pdos_atm',
     ax.set_ylabel('PDOS(states/eV)')
     return pdos,fermi
 
-def pdosplot_soc():
+def pdosplot_soc(pdospath,ax,dospath=None,nscfpath=None,orbital=None,fermi=None,
+                tag='pdos_atm',cm='coolwarm',xrange=10,lw=2):
     """
-    Plot pdos from noncolin+soc calculation
+    Plot pdos from noncolin+soc calculation.
+    Params:
+    -------
+        pdospath,dospath,ax,otbital,fermi,tag,cm,xrange,lw:same as `pdosplot`
+        nscfpath: could be a path to a folder, a scf outputfile, or a nscf outputfile.
     """
-    pass
+    # First find fermi energy level
+    if dospath is None and nscfpath is None and fermi is None:
+        print('tell me where to find fermi energy level!!!')
+        return
+    if isinstance(fermi,float):
+        pass
+    elif nscfpath is None:
+        try:
+            with open(dospath,'r') as f:
+                fermi = f.readlines()[0]
+            fermi = float(fermi.split()[-2])
+            f.close()
+        except:
+            datafiles = glob.glob(os.path.join(dospath,'*_dos.dat'))
+            if len(datafiles)>1:
+                print('tell me which file you want using:')
+                for i,f in enumerate(datafiles):
+                    print("{}. {}\n".format(i,f))
+                idx = int(input('Type it here:'))
+                datafile = datafiles[idx]
+            elif not datafiles:
+                print('No DOS dat file found!!!')
+                return
+            else:
+                datafile = datafiles[0]
+
+            with open(datafile,'r') as f:
+                fermi = f.readlines()[0]
+            fermi = float(fermi.split()[-2])
+            f.close()
+    else:
+        try:
+            with open(nscfpath,'r') as f:
+                content = f.readlines()
+            f.close()
+        except:
+            datafiles = glob.glob(os.path.join(nscfpath,'*_nscf.out'))
+            if len(datafiles)>1:
+                print('tell me which file you want using:')
+                for i,f in enumerate(datafiles):
+                    print("{}. {}\n".format(i,f))
+                idx = int(input('Type it here:'))
+                datafile = datafiles[idx]
+            elif not datafiles:
+                print('No nscf output file found!!!')
+                return
+            else:
+                datafile = datafiles[0]
+
+            with open(datafile,'r') as f:
+                content = f.readlines()
+            f.close()
+
+        fermi,i = None,80
+        while i <len(content):
+            if 'the Fermi energy is' in content[i]:
+                fermi = float(content[i].split()[-2])
+                i +=len(content)
+            i+=1
+        if fermi is None:
+            print('did not find fermi energy in nscf output!!!')
+            return
+    
+    # now load pdos files
+    pdosfiles = glob.glob(os.path.join(pdospath,'*{}*'.format(tag)))
+    temp = pd.read_csv(pdosfiles[0], delimiter='\s+',header=None,skiprows=[0]).to_numpy()
+    totlen = len(temp)
+
+    if orbital=='by element':
+        pdos = {}
+        atmtyp = []
+        for f in pdosfiles:
+            mid = f.split('#')[-2]
+            atm=mid[mid.find('(')+1:mid.find(')')]
+            if atm in atmtyp:
+                temp = pd.read_csv(f, delimiter='\s+',header=None,skiprows=[0]).to_numpy()[:,:2]
+                pdos[atm][:,1]+=temp[:,1]
+            else:
+                atmtyp.append(atm)
+                pdos[atm]=pd.read_csv(f, delimiter='\s+',header=None,skiprows=[0]).to_numpy()[:,:2]
+    elif orbital=='by orbital':
+        pdos = {}
+        orbtyp = []
+        for f in pdosfiles:
+            mid = f.split('#')[-1]
+            mid,j = mid[:-1].split('_')
+            j = str(Fraction(float(j[1:])))
+            m = mid.split('(')[1]
+            orb=m+j
+            if orb in orbtyp:
+                temp = pd.read_csv(f, delimiter='\s+',header=None,skiprows=[0]).to_numpy()[:,:2]
+                pdos[orb][:,1]+=temp[:,1]
+            else:
+                orbtyp.append(orb)
+                pdos[orb]=pd.read_csv(f, delimiter='\s+',header=None,skiprows=[0]).to_numpy()[:,:2]
+    elif isinstance(orbital,list):
+        pdos = {}
+        keytyp = []
+        for comb in orbital:
+            t1, t2 = comb
+            key = t1+t2
+            pdos[t1+'('+t2+')']=np.zeros((totlen,2))
+            keytyp.append(key)
+        for f in pdosfiles:
+            mid1,mid2 = f.split('#')[-2:]
+            atm=mid1[mid1.find('(')+1:mid1.find(')')]
+            mid,j = mid2[:-1].split('_')
+            m=mid.split('(')[1]
+            j = str(Fraction(float(j[1:])))
+            if atm+m+j in keytyp:
+                pdos[atm+'('+m+j+')']+=pd.read_csv(f, delimiter='\s+',header=None,skiprows=[0]).to_numpy()[:,:2]
+
+    else:
+        print('No orbital info provided,exiting...')
+        return
+
+    # prepare color
+    clrs = plt.get_cmap(cm,len(list(pdos.keys())))
+    for i,k in enumerate(list(pdos.keys())):
+        ax.plot(pdos[k][:,0]-fermi,pdos[k][:,1],color=clrs(i),label=k,linewidth=lw)
+
+    ymin,ymax=ax.get_ylim()
+    ax.plot([0,0],[ymin,ymax],'k--',linewidth=lw)
+    ax.set_ylim([ymin,ymax])
+    # add a thin horizontal line at DOS=0
+    ax.plot([-xrange,xrange],[0,0],'k-',linewidth=lw*0.5)
+    ax.set_xlim([-xrange,xrange])
+    ax.set_xlabel(r'$E-E_{Fermi}$')
+    ax.set_ylabel('PDOS(states/eV)')
+    return pdos,fermi
 
 if __name__ == "__main__":
     pdospath = 'C://Users//liu_s//Documents//BW_results//SA//Naf1//GS//DOS-PDOS'
