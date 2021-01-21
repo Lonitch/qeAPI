@@ -35,6 +35,7 @@ The sections below are arranged as
 - [Set up file system ready for DFT calculation](#set-up-file-system-ready-for-dft-calculation)   
 - [Submit Calculation jobs](#submit-calculation-jobs)        
     - [!!! The workflow for running calculations](#-the-workflow-for-running-calculations)
+    - [Useful command for running jobs on a slurm system](#useful-command-for-running-jobs-on-a-slurm-system)
 - [Navigation of the Repo](#navigation-of-the-repo)
 - [Citation](#citation)
 
