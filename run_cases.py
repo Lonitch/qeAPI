@@ -106,11 +106,12 @@ for file in glob.glob(iptformat):
 				if t2 in ['gamma','Gamma','GAMMA']:
 					qemachine=qe[0].format(1)
 				else:
-					k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
-					np = int(k1)*int(k2)*int(k3)
-					while crnum*ndnum%np!=0:
-						np = np//2
-					qemachine=qe[0].format(np)
+					# k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
+					# np = int(k1)*int(k2)*int(k3)
+					# while crnum*ndnum%np!=0:
+					# 	np = np//2
+					# qemachine=qe[0].format(np)
+					qemachine=qe[0].format(ndnum)
 				p+=len(filedata)
 			p+=1
 		filelst[4].append(tempstr)
@@ -128,11 +129,12 @@ for file in glob.glob(iptformat):
 				if t2 in ['gamma','Gamma','GAMMA']:
 					qemachine=qe[0].format(1)
 				else:
-					k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
-					np = int(k1)*int(k2)*int(k3)
-					while crnum*ndnum%np!=0:
-						np = np//2
-					qemachine=qe[0].format(np)
+					# k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
+					# np = int(k1)*int(k2)*int(k3)
+					# while crnum*ndnum%np!=0:
+					# 	np = np//2
+					# qemachine=qe[0].format(np)
+					qemachine=qe[0].format(ndnum)
 				p+=len(filedata)
 			p+=1
 		filelst[1].append(tempstr)
@@ -156,11 +158,12 @@ for file in glob.glob(iptformat):
 					if t2 in ['gamma','Gamma','GAMMA']:
 						qemachine=qe[0].format(1)
 					else:
-						k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
-						np = int(k1)*int(k2)*int(k3)
-						while crnum*ndnum%np!=0:
-							np = np//2
-						qemachine=qe[0].format(np)
+						# k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
+						# np = int(k1)*int(k2)*int(k3)
+						# while crnum*ndnum%np!=0:
+						# 	np = np//2
+						# qemachine=qe[0].format(np)
+						qemachine=qe[0].format(ndnum)
 					p+=len(filedata)
 				p+=1
 		filelst[2].append(tempstr)
@@ -175,11 +178,12 @@ for file in glob.glob(iptformat):
 				if t2 in ['gamma','Gamma','GAMMA']:
 					qemachine=qe[0].format(1)
 				else:
-					k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
-					np = int(k1)*int(k2)*int(k3)
-					while crnum*ndnum%np!=0:
-						np = np//2
-					qemachine=qe[0].format(np)
+					# k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
+					# np = int(k1)*int(k2)*int(k3)
+					# while crnum*ndnum%np!=0:
+					# 	np = np//2
+					# qemachine=qe[0].format(np)
+					qemachine=qe[0].format(ndnum)
 				p+=len(filedata)
 			p+=1
 		filelst[0].append(tempstr)
