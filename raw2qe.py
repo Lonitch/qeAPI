@@ -54,8 +54,8 @@ HEAD = """&CONTROL
 /
 
 &CELL
- cell_dynamics="bfgs",
- cell_dofree="all"
+cell_dynamics="bfgs",
+cell_dofree="all"
 /
 
 ATOMIC_SPECIES
@@ -874,7 +874,7 @@ class qeIpt:
 
         atom_species=''
         for n,v in self.defaultval['ATOMIC_SPECIES'].items():
-            atom_species+='{},{},{}\n'.format(n,v[0],v[1])
+            atom_species+=' {} {} {}\n'.format(n,v[0],v[1])
         fill.append(atom_species)
 
         if self.defaultval['CONTROL']['calculation']=='bands':
@@ -901,7 +901,7 @@ class qeIpt:
 
         poslst = ""
         for p,n in zip(self.atpos,self.atsymb):
-            poslst+="{} {} {} {}\n".format(n,p[0],p[1],p[2])
+            poslst+="  {} {} {} {}\n".format(n,p[0],p[1],p[2])
         fill.append(poslst)
 
         if 'restart_mode' in self.defaultval['CONTROL'].keys():

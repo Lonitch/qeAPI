@@ -1,6 +1,6 @@
 """
-This script prepare files for submitting QE calculation jobs to a high-performance computational
-platform running on "slurm" system, and having python3 and intel LAPACK installed. 
+This script prepare files for submitting QE calculation jobs to XSEDE platform running on "slurm" system, 
+and having python3 and QuantumEspresso installed. 
 
 !!!Please change the tring "top" if the platform environment you have access to is slightly different.
 
@@ -14,8 +14,10 @@ import glob,random
 
 
 inbit = ''
-qe = ['mpirun  ./pw.x -npool {} -in','./dos.x -in', './projwfc.x -in', 
-'mpirun ./pp.x -in','./bands.x -in','mpirun -np {} ./gw.x -npool {} -nimage {} -in']
+qe = ['mpirun  -np $SLURM_NTASKS $QuantumEspresso/bin/pw.x < ','$QuantumEspresso/dos.x < ', 
+'$QuantumEspresso/bin/projwfc.x < ', 
+'mpirun -np $SLURM_NTASKS $QuantumEspresso/bin/pp.x < ',
+'$QuantumEspresso/bin/bands.x < ']
 top = """#!/bin/bash
 #SBATCH -J high-fidelity         # Job name
 #SBATCH -o hf.%j.out   # define stdout filename; %j expands to jobid
@@ -30,9 +32,10 @@ top = """#!/bin/bash
 #SBATCH -n {}             # Total number of MPI tasks (if omitted, n=N)
 #SBATCH -t {}:{}:00       # set maximum run time of 30 minutes
 
-module load QuantumEspresso/6.7-intel
-module load intel/20.4
-module load intelmpi/20.4-intel20.4
+module load QuantumEspresso
+export PSEUDO_DIR=/jet/home/sliu135/inputdir/pseudo
+export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
+export QuantumEspresso=/opt/packages/QuantumEspresso/qe-6.7/INTEL
 
 cd {}
 
