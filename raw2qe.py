@@ -708,7 +708,7 @@ class qeIpt:
             self.defaultval['CONTROL']['outdir']=outdir
         
         ## Print prefix and outdir info
-        print("!!!Initiation info\n prefix:{}\n outdir:{}".format(self.defaultval['CONTROL']['prefix'], self.defaultval['CONTROL']['outdir']))
+        # print("!!!Initiation info\n prefix:{}\n outdir:{}".format(self.defaultval['CONTROL']['prefix'], self.defaultval['CONTROL']['outdir']))
     
     def scal_cell(self, scale): # expand or contract simulation box and scale atomic locations
         self.atoms.set_cell(self.atoms.get_cell()*scale)
@@ -923,6 +923,10 @@ class qeIpt:
             self.band = self.band.format(prefix,outdir,prefix)
             fn.write(self.band)
             fn.close()
+
+        print("!!!Initial info\n pseudodir:{}\n outdir:{}".format(self.defaultval['CONTROL']['pseudo_dir'], 
+        self.defaultval['CONTROL']['outdir']))
+
 
     # prepare input file for pp.x, the "usrdir" is a path to the source data file,
     # define "usrdir" when you moved your data file to a location different than the default path.

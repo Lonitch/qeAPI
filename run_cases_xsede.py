@@ -9,7 +9,7 @@ Currently, this script prepares job files for scf/nscf/relax/bands/dos/pdos/char
 Created by Sizhe Liu @University of Illinois at Urbana-Champaign
 """
 
-import os, sys, stat
+import os, stat
 import glob,random
 
 
@@ -17,17 +17,24 @@ inbit = ''
 qe = ['mpirun  ./pw.x -npool {} -in','./dos.x -in', './projwfc.x -in', 
 'mpirun ./pp.x -in','./bands.x -in','mpirun -np {} ./gw.x -npool {} -nimage {} -in']
 top = """#!/bin/bash
-#SBATCH --nodes={}
-#SBATCH --ntasks-per-node={}
-#SBATCH --time={}:{}:00
-#SBATCH --job-name="bands"
-#SBATCH --partition={}
+#SBATCH -J high-fidelity         # Job name
+#SBATCH -o hf.%j.out   # define stdout filename; %j expands to jobid
+#SBATCH -e hf.%j.err   # define stderr filename; skip to combine stdout and stderr
 
+#SBATCH --mail-user=sliu135@illinois.edu
+#SBATCH --mail-type=END
+#SBATCH -A phy210009p     # see the charge ID after "projects" command
 
-module load python/3
-module load intel/18.0
+#SBATCH -p {}         # specify queue
+#SBATCH -N {}          # Number of nodes, not cores (16 cores/node)
+#SBATCH -n {}             # Total number of MPI tasks (if omitted, n=N)
+#SBATCH -t {}:{}:00       # set maximum run time of 30 minutes
+
+module load QuantumEspresso/6.7-intel
+module load intel/20.4
+module load intelmpi/20.4-intel20.4
+
 cd {}
-
 
 """
 
@@ -44,16 +51,19 @@ if iptformat=='':
 else:
     iptformat='*'+iptformat+'*.in'
 
-print('tell me number of nodes(<=8) and number of cores per node(<=20), separated by comma(default is 4,12)')
+print('tell me the name of your partition (default is RM)')
+partition = input('Type is here:')
+if partition == '':
+    partition = 'RM'
+
+print('tell me number of nodes')
 nodeinfo = input('Type it here:')
 if nodeinfo=='':
-    ndnum,crnum=4,12
+    ndnum=8
 else:
-    ndnum,crnum = nodeinfo.split(',')
-    ndnum = int(ndnum)
-    crnum = int(crnum)
+    ndnum = int(nodeinfo)
 
-print('tell me the walltime you want to request,and separate hr and min using comma(<=4hrs, default is 3hr)')
+print('tell me the walltime you want to request,and separate hr and min using comma(<=48hrs, default is 3hr)')
 waltinfo = input('Type it here(e.g. 3,20):')
 if waltinfo=='':
     hr,mn = '3','00'
@@ -64,11 +74,8 @@ else:
 	if int(mn)<10:
 		mn = '0'+mn
 
-quename = input('Tell me the queue name(default is beckman):')
-if quename=='':
-    quename = 'beckman'
 
-top = top.format(ndnum,crnum,hr,mn,quename,os.getcwd())
+top = top.format(partition,ndnum,ndnum,hr,mn,svpath)
 
 WINDOWS_LINE_ENDING = b'\r\n'
 UNIX_LINE_ENDING = b'\n'
@@ -141,10 +148,7 @@ for file in glob.glob(iptformat):
 		filelst[3].append(tempstr)
 	elif 'bands' in tempstr or 'gw' in tempstr:
 		if 'gw' in tempstr:
-			if ndnum*crnum%8!=0:
-				print('!!!number of processors should be multiple of 8!!!')
-				continue
-			qemachine = qe[5].format(ndnum*crnum,8,ndnum*crnum//8)
+			pass
 		else:
 			with open(file, 'r') as f:
 				filedata = f.readlines()
@@ -200,17 +204,17 @@ for i in range(len(filelst)):
 			if 'restart' in filelst[i][j]:
 				repnum = input('how many times do you wanna restart it?(default is 1):')
 				if repnum=='' or repnum=='1':
-					jobs.write('JOB_{}=`sbatch {} |cut -f 4 -d " "`\n'.format(lb2, filelst[i][j]))
+					jobs.write('JOB_{}=`sbatch {}`\n'.format(lb2, filelst[i][j]))
 					lb2+=1
 				elif int(repnum)>1:
 					print('"restart job" is sent into a job array, might cause running error!')
-					jobs.write('JOB_{}=`sbatch --array 1-{} --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,int(repnum),lb2-1,filelst[i][j]))
+					jobs.write('JOB_{}=`sbatch --array 1-{} --dependency=afterany:$JOB_{} {}`\n'.format(lb2,int(repnum),lb2-1,filelst[i][j]))
 					lb2+=1
 			else:
-				jobs.write('JOB_{}=`sbatch {} |cut -f 4 -d " "`\n'.format(lb2, filelst[i][j]))
+				jobs.write('JOB_{}=`sbatch {}`\n'.format(lb2, filelst[i][j]))
 				lb2+=1
 		else:
-			jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,lb2-1,filelst[i][j]))
+			jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {}`\n'.format(lb2,lb2-1,filelst[i][j]))
 			lb2+=1
 			if 'restart' in filelst[i][j]:
 				repnum = input('how many times do you wanna restart it?(default is 1):')
@@ -218,7 +222,7 @@ for i in range(len(filelst)):
 					continue
 				else:
 					print('"restart job" is sent into a job array, might cause running error!')
-					jobs.write('JOB_{}=`sbatch --array 1-{} --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,int(repnum),lb2-1,filelst[i][j]))
+					jobs.write('JOB_{}=`sbatch --array 1-{} --dependency=afterany:$JOB_{} {}`\n'.format(lb2,int(repnum),lb2-1,filelst[i][j]))
 					lb2+=1
 
 jobs.close()
