@@ -38,20 +38,16 @@ IBRAV = {'CUB':1,'FCC':2,'BCC':3,'RHL':4,'TET':6,'BCT':7,'ORC':8,'ORCC':9,
 # SCF calculation).
 
 HEAD = """&CONTROL
-{}
-/
+{}/
 
 &SYSTEM
-{}
-/
+{}/
 
 &ELECTRONS
-{}
-/
+{}/
 
 &IONS
-{}
-/
+{}/
 
 &CELL
 cell_dynamics="bfgs",
@@ -60,7 +56,6 @@ cell_dofree="all"
 
 ATOMIC_SPECIES
 {}
-
 K_POINTS {}
 {}
 
