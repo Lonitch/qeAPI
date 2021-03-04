@@ -33,6 +33,8 @@ top = """#!/bin/bash
 #SBATCH -t {}:{}:00       # set maximum run time of 30 minutes
 
 module load QuantumEspresso
+module load openmpi
+
 export PSEUDO_DIR=/jet/home/sliu135/inputdir/pseudo
 export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
 export QuantumEspresso=/opt/packages/QuantumEspresso/qe-6.7/INTEL

@@ -51,14 +51,12 @@ HEAD = """&CONTROL
 
 &CELL
 cell_dynamics="bfgs",
-cell_dofree="all"
+cell_dofree="all",
 /
-
-ATOMIC_SPECIES
+ATOMIC_SPECIES 
 {}
 K_POINTS {}
 {}
-
 ATOMIC_POSITIONS angstrom
 {}
 
@@ -738,7 +736,7 @@ class qeIpt:
             raise Exception('Give me the list of tuples in a format of ("symbol","name")!!!')
         else:
             for item in pseudolst:
-                self.defaultval['ATOMIC_SPECIES'][item[0]]=[read_atomInfo(item[0])['atomic_mass'],item[1]]
+                self.defaultval['ATOMIC_SPECIES'][item[0]]=[np.round(read_atomInfo(item[0])['atomic_mass'],4),item[1]]
 
     def nbnd_from_pseudo(self,pseudolst=None):
         if not isinstance(pseudolst,list) and not isinstance(pseudolst,dict):
@@ -769,6 +767,7 @@ class qeIpt:
         cellen = self.atoms.get_cell_lengths_and_angles()
         self.atsymb = self.atoms.get_chemical_symbols()
         self.atpos = self.atoms.get_positions()
+        self.atpos = np.round(self.atpos,4)
         indices = defaultdict(list)
         for i,v in enumerate(self.atsymb):
             indices[v].append(i)
@@ -781,16 +780,16 @@ class qeIpt:
         
         self.defaultval['SYSTEM']['nat']=nat
         self.defaultval['SYSTEM']['ntyp']=ntyp
-        self.defaultval['SYSTEM']['A'] = cellen[0]
-        self.defaultval['SYSTEM']['B'] = cellen[1]
-        self.defaultval['SYSTEM']['C'] = cellen[2]
-        self.defaultval['SYSTEM']['cosAB'] = math.cos(cellen[3]/180*math.pi) 
-        self.defaultval['SYSTEM']['cosAC'] = math.cos(cellen[4]/180*math.pi) 
-        self.defaultval['SYSTEM']['cosBC'] = math.cos(cellen[5]/180*math.pi) 
+        self.defaultval['SYSTEM']['A'] = np.round(cellen[0],4)
+        self.defaultval['SYSTEM']['B'] = np.round(cellen[1],4)
+        self.defaultval['SYSTEM']['C'] = np.round(cellen[2],4)
+        self.defaultval['SYSTEM']['cosAB'] = np.round(math.cos(cellen[3]/180*math.pi),4)
+        self.defaultval['SYSTEM']['cosAC'] = np.round(math.cos(cellen[4]/180*math.pi),4)
+        self.defaultval['SYSTEM']['cosBC'] = np.round(math.cos(cellen[5]/180*math.pi),4)
         self.defaultval['SYSTEM']['nbnd'] = nbnd
         
         for t,m in zip(atyp.keys(),mass.keys()):
-            self.defaultval['ATOMIC_SPECIES'][t]=[m,t+'.upf']
+            self.defaultval['ATOMIC_SPECIES'][t]=[np.round(m,4),t+'.upf']
 
         # update defaultval dict from customized dictionary
         for k in custom_dict.keys():

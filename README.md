@@ -81,17 +81,19 @@ In this section we provide a way to compile Quantum Espresso on normal universit
 - Download newest QE package [here](https://github.com/QEF/q-e/releases) to your personal computer, then upload the downloaded `tar.gz` file to `dft` folder using **FileZilla** or similar software.
 - Run `tar -xvf qe-XXXX.tgz` to unzip the source files in `dft\qe-X.Y.Z` where `X`,`Y`, and `Z` are version numbers.
 - Load required compiling modules by 
-`module load gcc`
+`module load gcc`,
+`module load openmpi`,
 and
 `module load intel/18.0` or `module load python/3`
 - `cd qe-X.Y.Z`to get into source folder
+- If you're running QE on slurm system, you might want to add `MANUAL_DFLAGS  = -D__ISO_C_BINDING` in `make.inc` file to avoid `data parsing` error
 - Configure source files by running 
 `./configure -enable-openmp=yes -with-scalapack=intel`
 - Compile
 `make all`
 
 ### With Libxc
->**Important Note:** Some exchange-correlation functionals in [Libxc](https://www.tddft.org/programs/libxc/) is not well-tested for all classes of materials. Make sure you know what you're doing if you want to use Libxc with QE.
+>**Important Note:** Some exchange-correlation functionals in [Libxc](https://www.tddft.org/programs/libxc/) are not well-tested for all classes of materials. Make sure you know what you're doing if you want to use Libxc with QE.
 
 - Install libxc using autotool:
 (1) Download `libxc` [here](https://www.tddft.org/programs/libxc/download/)
@@ -110,8 +112,7 @@ and
 - Change make.inc file and make
 (1) open the `make.inc` file in the folder `qe-X.Y.Z` using `nano make.inc`
 (2) change the `DFLAGS` line into
-`	DFLAGS         =  -D__DFTI -D__LIBXC -D__MPI -D__SCALAPACK -D__SPIN_BALANCED
-`
+`DFLAGS         =  -D__DFTI -D__LIBXC -D__MPI -D__SCALAPACK -D__SPIN_BALANCED`
 (3) save the file, and run `make all`
 
 ## Set up file system ready for DFT calculation
