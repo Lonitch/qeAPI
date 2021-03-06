@@ -739,6 +739,13 @@ class qeIpt:
                 self.defaultval['ATOMIC_SPECIES'][item[0]]=[np.round(read_atomInfo(item[0])['atomic_mass'],4),item[1]]
 
     def nbnd_from_pseudo(self,pseudolst=None):
+        """
+        Description: calculate band number by defining list of atomic band number.
+        ---Params---
+        pseudolst: 
+        a list of tuples with each tuple made of (atom symbol,number of atomic bands)
+        ------------
+        """
         if not isinstance(pseudolst,list) and not isinstance(pseudolst,dict):
             raise Exception('Give me the list of tuples in a format of ("symbol",int) or a dictionary!!!')
         elif isinstance(pseudolst,list) and not all(isinstance(item, tuple) and len(item)==2 for item in pseudolst):
@@ -755,7 +762,7 @@ class qeIpt:
                     nbnd+=tempdir[k]*atyp[k]
                 else:
                     nbnd+=read_atomInfo(k)['number']*atyp[k]
-            self.defaultval['SYSTEM']['nbnd']=int(nbnd/2+20)
+            self.defaultval['SYSTEM']['nbnd']=int(nbnd/2+16)
 
 
     def update_default(self, custom_dict={}):
@@ -772,11 +779,11 @@ class qeIpt:
         for i,v in enumerate(self.atsymb):
             indices[v].append(i)
 
-        # calculate number of bands (electronNum/2*1.4)
+        # calculate number of bands (electronNum/2*1.2)
         nbnd = 0
         for k in atyp.keys():
             nbnd+=read_atomInfo(k)['number']*atyp[k]
-        nbnd = int(nbnd/2*1.4)
+        nbnd = int(nbnd/2+16)
         
         self.defaultval['SYSTEM']['nat']=nat
         self.defaultval['SYSTEM']['ntyp']=ntyp

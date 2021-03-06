@@ -1,10 +1,12 @@
 """
-This script prepare files for submitting QE calculation jobs to XSEDE platform running on "slurm" system, 
-and having python3 and QuantumEspresso installed. 
+This script prepare files for submitting QE calculation jobs to XSEDE bridges2
+platform, where python3 and QuantumEspresso are compiled. 
 
 !!!Please change the tring "top" if the platform environment you have access to is slightly different.
 
-Currently, this script prepares job files for scf/nscf/relax/bands/dos/pdos/charge density/gw calcs.
+Currently, this script prepares job files for 
+
+	scf/nscf/relax/bands/dos/pdos/charge density calcs.
 
 Created by Sizhe Liu @University of Illinois at Urbana-Champaign
 """
@@ -14,30 +16,26 @@ import glob,random
 
 
 inbit = ''
-qe = ['mpirun  -np $SLURM_NTASKS $QuantumEspresso/bin/pw.x < ','$QuantumEspresso/dos.x < ', 
-'$QuantumEspresso/bin/projwfc.x < ', 
-'mpirun -np $SLURM_NTASKS $QuantumEspresso/bin/pp.x < ',
-'$QuantumEspresso/bin/bands.x < ']
+qe = ['mpirun  -np $SLURM_NTASKS pw.x -npool {} -input ','mpirun -np $SLURM_NTASKS dos.x -input ', 
+'mpirun  -np $SLURM_NTASKS projwfc.x -input ', 
+'mpirun -np $SLURM_NTASKS pp.x -input ',
+'mpirun -np $SLURM_NTASKS bands.x -input ']
+
+# top for running jobs on bridges2
+
 top = """#!/bin/bash
-#SBATCH -J high-fidelity         # Job name
-#SBATCH -o hf.%j.out   # define stdout filename; %j expands to jobid
-#SBATCH -e hf.%j.err   # define stderr filename; skip to combine stdout and stderr
+#SBATCH -N 1
+#SBATCH -p RM
+#SBATCH --ntasks-per-node={}
+#SBATCH --job-name=high-fidelity
+#SBATCH -t {}:{}:00
+#SBATCH -o hf.%j.out
+#SBATCH -e hf.%j.err
 
-#SBATCH --mail-user=sliu135@illinois.edu
-#SBATCH --mail-type=END
-#SBATCH -A phy210009p     # see the charge ID after "projects" command
-
-#SBATCH -p {}         # specify queue
-#SBATCH -N {}          # Number of nodes, not cores (16 cores/node)
-#SBATCH -n {}             # Total number of MPI tasks (if omitted, n=N)
-#SBATCH -t {}:{}:00       # set maximum run time of 30 minutes
-
-module load QuantumEspresso
-module load openmpi
-
-export PSEUDO_DIR=/jet/home/sliu135/inputdir/pseudo
-export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
-export QuantumEspresso=/opt/packages/QuantumEspresso/qe-6.7/INTEL
+ulimit -s unlimited
+export OMP_NUM_THREADS=1
+echo "SLURM_NTASKS: " $SLURM_NTASKS
+module load intel/20.4 intelmpi/20.4-intel20.4 QuantumEspresso/6.7-intel
 
 cd {}
 
@@ -56,17 +54,14 @@ if iptformat=='':
 else:
     iptformat='*'+iptformat+'*.in'
 
-print('tell me the name of your partition (default is RM)')
-partition = input('Type is here:')
-if partition == '':
-    partition = 'RM'
-
-print('tell me number of nodes')
+print('tell me number of ntasks on your node and the pool number, separated with ","')
 nodeinfo = input('Type it here:')
 if nodeinfo=='':
-    ndnum=8
+	ntask=8
+	plnum=4
 else:
-    ndnum = int(nodeinfo)
+	ntask,plnum = nodeinfo.split(',')
+	ntask,plnum = int(ntask),int(plnum)
 
 print('tell me the walltime you want to request,and separate hr and min using comma(<=48hrs, default is 3hr)')
 waltinfo = input('Type it here(e.g. 3,20):')
@@ -80,7 +75,7 @@ else:
 		mn = '0'+mn
 
 
-top = top.format(partition,ndnum,ndnum,hr,mn,svpath)
+top = top.format(ntask,hr,mn,svpath)
 
 WINDOWS_LINE_ENDING = b'\r\n'
 UNIX_LINE_ENDING = b'\n'
@@ -116,12 +111,7 @@ for file in glob.glob(iptformat):
 				if t2 in ['gamma','Gamma','GAMMA']:
 					qemachine=qe[0].format(1)
 				else:
-					# k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
-					# np = int(k1)*int(k2)*int(k3)
-					# while crnum*ndnum%np!=0:
-					# 	np = np//2
-					# qemachine=qe[0].format(np)
-					qemachine=qe[0].format(ndnum)
+					qemachine=qe[0].format(plnum)
 				p+=len(filedata)
 			p+=1
 		filelst[4].append(tempstr)
@@ -139,12 +129,7 @@ for file in glob.glob(iptformat):
 				if t2 in ['gamma','Gamma','GAMMA']:
 					qemachine=qe[0].format(1)
 				else:
-					# k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
-					# np = int(k1)*int(k2)*int(k3)
-					# while crnum*ndnum%np!=0:
-					# 	np = np//2
-					# qemachine=qe[0].format(np)
-					qemachine=qe[0].format(ndnum)
+					qemachine=qe[0].format(plnum)
 				p+=len(filedata)
 			p+=1
 		filelst[1].append(tempstr)
@@ -165,12 +150,7 @@ for file in glob.glob(iptformat):
 					if t2 in ['gamma','Gamma','GAMMA']:
 						qemachine=qe[0].format(1)
 					else:
-						# k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
-						# np = int(k1)*int(k2)*int(k3)
-						# while crnum*ndnum%np!=0:
-						# 	np = np//2
-						# qemachine=qe[0].format(np)
-						qemachine=qe[0].format(ndnum)
+						qemachine=qe[0].format(plnum)
 					p+=len(filedata)
 				p+=1
 		filelst[2].append(tempstr)
@@ -185,12 +165,7 @@ for file in glob.glob(iptformat):
 				if t2 in ['gamma','Gamma','GAMMA']:
 					qemachine=qe[0].format(1)
 				else:
-					# k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
-					# np = int(k1)*int(k2)*int(k3)
-					# while crnum*ndnum%np!=0:
-					# 	np = np//2
-					# qemachine=qe[0].format(np)
-					qemachine=qe[0].format(ndnum)
+					qemachine=qe[0].format(plnum)
 				p+=len(filedata)
 			p+=1
 		filelst[0].append(tempstr)
