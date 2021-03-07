@@ -20,7 +20,7 @@ from collections import Counter,defaultdict
 from copy import deepcopy
 from qe2cif import *
 import math
-import os
+import os,json,sys
 
 # Index of Bravais Lattice
 # Current script has a function "check_bravais" to assign correct index of bravais lattice to your system,
@@ -731,39 +731,61 @@ class qeIpt:
         bravais = c.get_bravais_lattice().name
         self.defaultval['SYSTEM']['ibrav']=IBRAV[bravais]
 
-    def set_pseudo_name(self,pseudolst=None):
-        if pseudolst is None:
-            raise Exception('Give me the list of tuples in a format of ("symbol","name")!!!')
-        else:
-            for item in pseudolst:
-                self.defaultval['ATOMIC_SPECIES'][item[0]]=[np.round(read_atomInfo(item[0])['atomic_mass'],4),item[1]]
-
-    def nbnd_from_pseudo(self,pseudolst=None):
-        """
-        Description: calculate band number by defining list of atomic band number.
+    def set_pseudo_names(self,pseudotag):
+        """Description: change names of pseudopot
         ---Params---
-        pseudolst: 
-        a list of tuples with each tuple made of (atom symbol,number of atomic bands)
+        pseudotag could be one of the following three things:
+        1. a list of 2-tuples of (symbol,name),
+        2. a string of 'precision', which add "_SSSP_precision" in pseudopot names, 
+        3. or 'efficiency'which add "_SSSP_efficiency" in pseudopot names.
+        """
+        if isinstance(pseudotag,list):
+            for item in pseudotag:
+                self.defaultval['ATOMIC_SPECIES'][item[0]]=[np.round(read_atomInfo(item[0])['atomic_mass'],4),item[1]]
+        elif pseudotag=='precision':
+            ct = Counter(self.atsymb)
+            for k in ct.keys():
+                self.defaultval['ATOMIC_SPECIES'][k]=[np.round(read_atomInfo(k)['atomic_mass'],4),
+                k+'_SSSP_precision.upf']
+        elif pseudotag=='efficiency':
+            ct = Counter(self.atsymb)
+            for k in ct.keys():
+                self.defaultval['ATOMIC_SPECIES'][k]=[np.round(read_atomInfo(k)['atomic_mass'],4),
+                k+'_SSSP_efficiency.upf']
+
+    def nbnd_from_pseudo(self,jsonfile):
+        """
+        Description: calculate band number using valence values in pseudopot files.
+            The function also update cutoff energy and rho by using the largest 
+            recommended values among all the elements in the system.
+        ---Params---
+        jsonfile: 
+        currently, it could be 'sssp_precision.json' or 'sssp_efficiency.json'
         ------------
         """
-        if not isinstance(pseudolst,list) and not isinstance(pseudolst,dict):
-            raise Exception('Give me the list of tuples in a format of ("symbol",int) or a dictionary!!!')
-        elif isinstance(pseudolst,list) and not all(isinstance(item, tuple) and len(item)==2 for item in pseudolst):
-            raise Exception('Give me the list of tuples in a format of ("symbol",int) or a dictionary!!!')
-        else:
-            nbnd = 0
-            if isinstance(pseudolst,list):
-                tempdir = dict(pseudolst)
+        i,path =0, ''
+        while 'qeAPI' not in path: # find the root path for qeAPI
+            path = sys.path[i]
+            i+=1
+        atyp = Counter(self.atoms.get_chemical_symbols())
+        with open(os.path.join(path,jsonfile)) as json_file:
+            table=json.load(json_file)
+        json_file.close()
+        opt_cutoff = [0,0]
+        nbnd = 0
+        for k in atyp.keys():
+            if k in atyp.keys():
+                nbnd+=table[k]['Z valence']*atyp[k]
             else:
-                tempdir = pseudolst
-            atyp = Counter(self.atoms.get_chemical_symbols())
-            for k in atyp.keys():
-                if k in tempdir.keys():
-                    nbnd+=tempdir[k]*atyp[k]
-                else:
-                    nbnd+=read_atomInfo(k)['number']*atyp[k]
-            self.defaultval['SYSTEM']['nbnd']=int(nbnd/2+16)
-
+                nbnd+=table[k]['Z valence']*atyp[k]
+            
+            if table[k]['cutoff']>opt_cutoff[0]:
+                    opt_cutoff[0]=table[k]['cutoff']
+            if table[k]['rho_cutoff']>opt_cutoff[1]:
+                opt_cutoff[1]=table[k]['rho_cutoff']
+        self.defaultval['SYSTEM']['nbnd']=int(nbnd/2+16)
+        self.defaultval['SYSTEM']['ecutwfc']=int(opt_cutoff[0])
+        self.defaultval['SYSTEM']['ecutrho']=int(opt_cutoff[1])
 
     def update_default(self, custom_dict={}):
         # note that type_val must also be a two-layer dictionary. but no need to include all the control panel.
