@@ -753,14 +753,16 @@ class qeIpt:
                 self.defaultval['ATOMIC_SPECIES'][k]=[np.round(read_atomInfo(k)['atomic_mass'],4),
                 k+'_SSSP_efficiency.upf']
 
-    def nbnd_from_pseudo(self,jsonfile):
+    def nbnd_from_pseudo(self,jsonfile,bndscale=1.2):
         """
         Description: calculate band number using valence values in pseudopot files.
             The function also update cutoff energy and rho by using the largest 
             recommended values among all the elements in the system.
         ---Params---
         jsonfile: 
-        currently, it could be 'sssp_precision.json' or 'sssp_efficiency.json'
+            currently, it could be 'sssp_precision.json' or 'sssp_efficiency.json'
+        bndscale:
+            nbnd = int((total electron number)/2*bndscale)
         ------------
         """
         i,path =0, ''
@@ -774,16 +776,13 @@ class qeIpt:
         opt_cutoff = [0,0]
         nbnd = 0
         for k in atyp.keys():
-            if k in atyp.keys():
-                nbnd+=table[k]['Z valence']*atyp[k]
-            else:
-                nbnd+=table[k]['Z valence']*atyp[k]
-            
+            nbnd+=read_atomInfo(k)['number']*atyp[k]
             if table[k]['cutoff']>opt_cutoff[0]:
                     opt_cutoff[0]=table[k]['cutoff']
             if table[k]['rho_cutoff']>opt_cutoff[1]:
                 opt_cutoff[1]=table[k]['rho_cutoff']
-        self.defaultval['SYSTEM']['nbnd']=int(nbnd/2+16)
+                
+        self.defaultval['SYSTEM']['nbnd']=int(nbnd/2*bndscale)
         self.defaultval['SYSTEM']['ecutwfc']=int(opt_cutoff[0])
         self.defaultval['SYSTEM']['ecutrho']=int(opt_cutoff[1])
 
