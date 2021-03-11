@@ -815,9 +815,9 @@ class qeIpt:
         self.defaultval['SYSTEM']['cosAC'] = np.round(math.cos(cellen[4]/180*math.pi),4)
         self.defaultval['SYSTEM']['cosBC'] = np.round(math.cos(cellen[5]/180*math.pi),4)
         self.defaultval['SYSTEM']['nbnd'] = nbnd
-        
-        for t,m in zip(atyp.keys(),mass.keys()):
-            self.defaultval['ATOMIC_SPECIES'][t]=[np.round(m,4),t+'.upf']
+        if not self.defaultval['ATOMIC_SPECIES']:
+            for t,m in zip(atyp.keys(),mass.keys()):
+                self.defaultval['ATOMIC_SPECIES'][t]=[np.round(m,4),t+'.upf']
 
         # update defaultval dict from customized dictionary
         for k in custom_dict.keys():
