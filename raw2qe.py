@@ -741,16 +741,16 @@ class qeIpt:
         """
         if isinstance(pseudotag,list):
             for item in pseudotag:
-                self.defaultval['ATOMIC_SPECIES'][item[0]]=[np.round(read_atomInfo(item[0])['atomic_mass'],6),item[1]]
+                self.defaultval['ATOMIC_SPECIES'][item[0]]=[np.round(read_atomInfo(item[0])['atomic_mass'],8),item[1]]
         elif pseudotag=='precision':
             ct = Counter(self.atsymb)
             for k in ct.keys():
-                self.defaultval['ATOMIC_SPECIES'][k]=[np.round(read_atomInfo(k)['atomic_mass'],6),
+                self.defaultval['ATOMIC_SPECIES'][k]=[np.round(read_atomInfo(k)['atomic_mass'],8),
                 k+'_SSSP_precision.upf']
         elif pseudotag=='efficiency':
             ct = Counter(self.atsymb)
             for k in ct.keys():
-                self.defaultval['ATOMIC_SPECIES'][k]=[np.round(read_atomInfo(k)['atomic_mass'],6),
+                self.defaultval['ATOMIC_SPECIES'][k]=[np.round(read_atomInfo(k)['atomic_mass'],8),
                 k+'_SSSP_efficiency.upf']
 
     def nbnd_from_pseudo(self,jsonfile,bndscale=1.2):
@@ -795,7 +795,7 @@ class qeIpt:
         cellen = self.atoms.get_cell_lengths_and_angles()
         self.atsymb = self.atoms.get_chemical_symbols()
         self.atpos = self.atoms.get_positions()
-        self.atpos = np.round(self.atpos,6)
+        self.atpos = np.round(self.atpos,8)
         indices = defaultdict(list)
         for i,v in enumerate(self.atsymb):
             indices[v].append(i)
@@ -808,16 +808,16 @@ class qeIpt:
         
         self.defaultval['SYSTEM']['nat']=nat
         self.defaultval['SYSTEM']['ntyp']=ntyp
-        self.defaultval['SYSTEM']['A'] = np.round(cellen[0],6)
-        self.defaultval['SYSTEM']['B'] = np.round(cellen[1],6)
-        self.defaultval['SYSTEM']['C'] = np.round(cellen[2],6)
-        self.defaultval['SYSTEM']['cosAB'] = np.round(math.cos(cellen[3]/180*math.pi),6)
-        self.defaultval['SYSTEM']['cosAC'] = np.round(math.cos(cellen[4]/180*math.pi),6)
-        self.defaultval['SYSTEM']['cosBC'] = np.round(math.cos(cellen[5]/180*math.pi),6)
+        self.defaultval['SYSTEM']['A'] = np.round(cellen[0],8)
+        self.defaultval['SYSTEM']['B'] = np.round(cellen[1],8)
+        self.defaultval['SYSTEM']['C'] = np.round(cellen[2],8)
+        self.defaultval['SYSTEM']['cosAB'] = np.round(math.cos(cellen[3]/180*math.pi),8)
+        self.defaultval['SYSTEM']['cosAC'] = np.round(math.cos(cellen[4]/180*math.pi),8)
+        self.defaultval['SYSTEM']['cosBC'] = np.round(math.cos(cellen[5]/180*math.pi),8)
         self.defaultval['SYSTEM']['nbnd'] = nbnd
         if not self.defaultval['ATOMIC_SPECIES']:
             for t,m in zip(atyp.keys(),mass.keys()):
-                self.defaultval['ATOMIC_SPECIES'][t]=[np.round(m,6),t+'.upf']
+                self.defaultval['ATOMIC_SPECIES'][t]=[np.round(m,8),t+'.upf']
 
         # update defaultval dict from customized dictionary
         for k in custom_dict.keys():
