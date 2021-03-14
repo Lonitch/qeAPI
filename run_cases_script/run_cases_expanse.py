@@ -17,13 +17,13 @@ import glob,random
 
 inbit = ''
 qe = [
-'mpirun --map-by core --mca btl_openib_if_include "mlx5_2:1" --mca btl openib,self,vader pw.x -npool {} -input psiwat.in ',
+'mpirun --map-by core --mca btl_openib_if_include "mlx5_2:1" --mca btl openib,self,vader pw.x -npool {} -input ',
 'mpirun -np $SLURM_NTASKS dos.x -input ', 
 'mpirun  -np $SLURM_NTASKS projwfc.x -input ', 
 'mpirun -np $SLURM_NTASKS pp.x -input ',
 'mpirun -np $SLURM_NTASKS bands.x -input ']
 
-# top for running jobs on bridges2
+# top for running jobs on expanse
 
 top = """#!/bin/bash
 #SBATCH --job-name="qe-mpi"
@@ -64,14 +64,16 @@ if iptformat=='':
 else:
     iptformat='*'+iptformat+'*.in'
 
-print('tell me number of ntasks on your node and the pool number, separated with ","')
+print('tell me number of ntasks(<128 with shared partition) on cpu node')
 nodeinfo = input('Type it here:')
+print('tell me number of pools for your jobs')
+poolinfo = input('Type it here:')
 if nodeinfo=='':
-	ntask=128
-	plnum=9
+        ntask=120
+        plnum=8
 else:
-	ntask,plnum = nodeinfo.split(',')
-	ntask,plnum = int(ntask),int(plnum)
+        ntask = int(nodeinfo)
+        plnum = int(poolinfo)
 
 print('tell me the walltime you want to request,and separate hr and min using comma(<=48hrs, default is 3hr)')
 waltinfo = input('Type it here(e.g. 3,20):')
