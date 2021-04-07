@@ -629,7 +629,6 @@ DEFAULTVAL = {
         'ecutrho':360.0,
         'input_dft':"rvv10",
         'lda_plus_u':'.FALSE.',
-        'nbnd':256,
         'occupations':"smearing",
         'smearing':"gaussian",
         'U_projection_type':"atomic"

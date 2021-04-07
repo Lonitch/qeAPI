@@ -17,15 +17,12 @@ inbit = ''
 qe = ['mpirun  ./pw.x -npool {} -in','./dos.x -in', './projwfc.x -in', 
 'mpirun ./pp.x -in','./bands.x -in','mpirun -np {} ./gw.x -npool {} -nimage {} -in']
 top = """#!/bin/bash
-#SBATCH --nodes={}
-#SBATCH --ntasks-per-node={}
+#SBATCH n {}
 #SBATCH --time={}:{}:00
 #SBATCH --job-name="bands"
 #SBATCH --partition={}
 
-
-module load python/3
-module load intel/18.0
+module load openmpi/4.0.5-gcc-7.2.0
 cd {}
 
 
@@ -44,12 +41,12 @@ if iptformat=='':
 else:
     iptformat='*'+iptformat+'*.in'
 
-print('tell me number of nodes(<=8) and number of cores per node(<=20), separated by comma(default is 4,12)')
+print('tell me total number of processors and number of k-point pools, separate them using comma,(e.g., 8,2)')
 nodeinfo = input('Type it here:')
 if nodeinfo=='':
-    ndnum,crnum=4,12
+    ndnum,crnum=12,4
 else:
-    ndnum,crnum = nodeinfo.split(',')
+    crnum,ndnum = nodeinfo.split(',')
     ndnum = int(ndnum)
     crnum = int(crnum)
 
@@ -68,7 +65,7 @@ quename = input('Tell me the queue name(default is beckman):')
 if quename=='':
     quename = 'beckman'
 
-top = top.format(ndnum,crnum,hr,mn,quename,os.getcwd())
+top = top.format(crnum,hr,mn,quename,os.getcwd())
 
 WINDOWS_LINE_ENDING = b'\r\n'
 UNIX_LINE_ENDING = b'\n'
@@ -104,11 +101,6 @@ for file in glob.glob(iptformat):
 				if t2 in ['gamma','Gamma','GAMMA']:
 					qemachine=qe[0].format(1)
 				else:
-					# k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
-					# np = int(k1)*int(k2)*int(k3)
-					# while crnum*ndnum%np!=0:
-					# 	np = np//2
-					# qemachine=qe[0].format(np)
 					qemachine=qe[0].format(ndnum)
 				p+=len(filedata)
 			p+=1
@@ -127,11 +119,6 @@ for file in glob.glob(iptformat):
 				if t2 in ['gamma','Gamma','GAMMA']:
 					qemachine=qe[0].format(1)
 				else:
-					# k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
-					# np = int(k1)*int(k2)*int(k3)
-					# while crnum*ndnum%np!=0:
-					# 	np = np//2
-					# qemachine=qe[0].format(np)
 					qemachine=qe[0].format(ndnum)
 				p+=len(filedata)
 			p+=1
@@ -156,11 +143,6 @@ for file in glob.glob(iptformat):
 					if t2 in ['gamma','Gamma','GAMMA']:
 						qemachine=qe[0].format(1)
 					else:
-						# k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
-						# np = int(k1)*int(k2)*int(k3)
-						# while crnum*ndnum%np!=0:
-						# 	np = np//2
-						# qemachine=qe[0].format(np)
 						qemachine=qe[0].format(ndnum)
 					p+=len(filedata)
 				p+=1
@@ -176,11 +158,6 @@ for file in glob.glob(iptformat):
 				if t2 in ['gamma','Gamma','GAMMA']:
 					qemachine=qe[0].format(1)
 				else:
-					# k1,k2,k3,k4,k5,k6 = filedata[p+1].split()
-					# np = int(k1)*int(k2)*int(k3)
-					# while crnum*ndnum%np!=0:
-					# 	np = np//2
-					# qemachine=qe[0].format(np)
 					qemachine=qe[0].format(ndnum)
 				p+=len(filedata)
 			p+=1
