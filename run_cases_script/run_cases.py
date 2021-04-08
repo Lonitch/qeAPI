@@ -14,7 +14,7 @@ import glob,random
 
 
 inbit = ''
-qe = ['mpirun  ./pw.x -npool {} -in','mpirun ./dos.x -in', 'mpirun ./projwfc.x -in', 
+qe = ['mpirun  ./pw.x -in','mpirun ./dos.x -in', 'mpirun ./projwfc.x -in', 
 'mpirun ./pp.x -in','./bands.x -in','mpirun -np {} ./gw.x -npool {} -nimage {} -in']
 top = """#!/bin/bash
 #SBATCH -n {}
