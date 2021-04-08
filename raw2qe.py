@@ -446,7 +446,8 @@ HEAD_pdos="""&PROJWFC
 HEAD_band="""&BANDS
     prefix      = "{}",
     outdir      = "{}",
-    filband     = "{}.dat"
+    filband     = "{}_bandsx.dat"
+    lsym        = .TRUE.
 /
 
 """
@@ -624,22 +625,18 @@ DEFAULTVAL = {
         'cosAC' : 0.5,
         'cosBC' : 0.5,
         'nspin' : 2,
-        'degauss':2.00000e-02,
+        'degauss':1.00000e-02,
         'ecutwfc':40.0,
         'ecutrho':360.0,
         'input_dft':"rvv10",
         'lda_plus_u':'.FALSE.',
         'occupations':"smearing",
         'smearing':"gaussian",
-        'U_projection_type':"atomic"
         },
     'ELECTRONS':{ # convergence settings
-        'startingpot':"atomic",
-        'startingwfc':"atomic+random",
         'mixing_beta':0.2,
         'conv_thr':1e-08,
         'diagonalization':'cg',
-        'diago_thr_init':1e-06,
         'electron_maxstep':300
         },
     'IONS':{ # relaxation settings
@@ -1014,6 +1011,19 @@ class qeIpt:
         self.pdos=self.pdos.format(prefix,outdir,prefix)
         fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_pdos.in'), "w")
         fn.write(self.pdos)
+        fn.close()
+
+    # prepare input file for bands.x
+    def prep_bandipt(self,usrdir=None):
+        prefix = self.defaultval['CONTROL']['prefix']
+        if usrdir:
+            outdir = usrdir
+        else:
+            outdir=self.defaultval['CONTROL']['outdir']
+
+        self.band=self.band.format(prefix,outdir,prefix)
+        fn = open(os.path.join(self.svpath,self.defaultval['CONTROL']['prefix']+'_band.in'), "w")
+        fn.write(self.band)
         fn.close()
 
     def prep_phipt(self,usrdir=None):
