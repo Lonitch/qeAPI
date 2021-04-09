@@ -14,10 +14,11 @@ import glob,random
 
 
 inbit = ''
-qe = ['mpirun  ./pw.x -in','mpirun ./dos.x -in', 'mpirun ./projwfc.x -in', 
+qe = ['mpirun --map-by node ./pw.x -npool {} -in','mpirun ./dos.x -in', 'mpirun ./projwfc.x -in', 
 'mpirun ./pp.x -in','./bands.x -in','mpirun -np {} ./gw.x -npool {} -nimage {} -in']
 top = """#!/bin/bash
 #SBATCH -n {}
+#SBATCH -N {}
 #SBATCH --time={}:{}:00
 #SBATCH --job-name="bands"
 #SBATCH --partition={}
@@ -35,25 +36,30 @@ jobs = open(os.path.join(svpath, depname), 'w')
 p = 0
 filelst = [[], [], [], [], [], [], [], []]
 print('Tell me what\'s in the names of input files,the code will search files with "*string*.in"')
+print('Or you can type "txt" to ask me looking up the "restart.txt"!')
 iptformat=input('Type it here:')
 if iptformat=='':
-    iptformat='*.in'
+	iptformat='*.in'
+elif iptformat=='txt':
+	with open('restart.txt','r') as cc:
+		iptformat = cc.read().splitlines()
+		cc.close()
 else:
-    iptformat='*'+iptformat+'*.in'
+	iptformat='*'+iptformat+'*.in'
 
 print('tell me total number of processors and number of k-point pools, separate them using comma,(e.g., 8,2)')
 nodeinfo = input('Type it here:')
 if nodeinfo=='':
-    ndnum,crnum=12,4
+	ndnum,crnum=4,12
 else:
-    crnum,ndnum = nodeinfo.split(',')
-    ndnum = int(ndnum)
-    crnum = int(crnum)
+	crnum,ndnum = nodeinfo.split(',')
+	ndnum = int(ndnum)
+	crnum = int(crnum)
 
 print('tell me the walltime you want to request,and separate hr and min using comma(<=4hrs, default is 3hr)')
 waltinfo = input('Type it here(e.g. 3,20):')
 if waltinfo=='':
-    hr,mn = '3','00'
+	hr,mn = '3','00'
 else:
 	hr,mn = waltinfo.split(',')
 	if int(hr)<10:
@@ -63,14 +69,17 @@ else:
 
 quename = input('Tell me the queue name(default is beckman):')
 if quename=='':
-    quename = 'beckman'
+	quename = 'beckman'
 
-top = top.format(crnum,hr,mn,quename,os.getcwd())
+top = top.format(crnum,ndnum,hr,mn,quename,os.getcwd())
 
 WINDOWS_LINE_ENDING = b'\r\n'
 UNIX_LINE_ENDING = b'\n'
-
-for file in glob.glob(iptformat):
+if isinstance(iptformat,list):
+	files = iptformat
+else:
+	files = glob.glob(iptformat)
+for file in files:
 
 	with open(file, 'rb') as f:
 		filedata = f.read()
@@ -126,26 +135,20 @@ for file in glob.glob(iptformat):
 	elif 'band' in tempstr and 'bands' not in tempstr:
 		qemachine=qe[4]
 		filelst[3].append(tempstr)
-	elif 'bands' in tempstr or 'gw' in tempstr:
-		if 'gw' in tempstr:
-			if ndnum*crnum%8!=0:
-				print('!!!number of processors should be multiple of 8!!!')
-				continue
-			qemachine = qe[5].format(ndnum*crnum,8,ndnum*crnum//8)
-		else:
-			with open(file, 'r') as f:
-				filedata = f.readlines()
-			f.close()
-			p = 0
-			while p < len(filedata):
-				if 'K_POINTS' in filedata[p]:
-					t1,t2 = filedata[p].split()
-					if t2 in ['gamma','Gamma','GAMMA']:
-						qemachine=qe[0].format(1)
-					else:
-						qemachine=qe[0].format(ndnum)
-					p+=len(filedata)
-				p+=1
+	elif 'bands' in tempstr:
+		with open(file, 'r') as f:
+			filedata = f.readlines()
+		f.close()
+		p = 0
+		while p < len(filedata):
+			if 'K_POINTS' in filedata[p]:
+				t1,t2 = filedata[p].split()
+				if t2 in ['gamma','Gamma','GAMMA']:
+					qemachine=qe[0].format(1)
+				else:
+					qemachine=qe[0].format(ndnum)
+				p+=len(filedata)
+			p+=1
 		filelst[2].append(tempstr)
 	else:
 		with open(file, 'r') as f:
