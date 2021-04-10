@@ -50,9 +50,8 @@ HEAD = """&CONTROL
 {}/
 
 &CELL
-cell_dynamics="bfgs",
-cell_dofree="all",
-/
+{}/
+
 ATOMIC_SPECIES 
 {}
 K_POINTS {}
@@ -631,19 +630,20 @@ DEFAULTVAL = {
         'input_dft':"rvv10",
         'lda_plus_u':'.FALSE.',
         'occupations':"smearing",
-        'smearing':"gaussian",
+        'smearing':"cold",
         },
     'ELECTRONS':{ # convergence settings
         'mixing_beta':0.2,
         'conv_thr':1e-08,
-        'diagonalization':'cg',
+        'diagonalization':'david',
         'electron_maxstep':300
         },
     'IONS':{ # relaxation settings
         'ion_dynamics':'bfgs'
         },
     'ATOMIC_SPECIES':{}, # a dict with each entry formulated as 'atom symbol':[atom mass, pseudopot name]
-    'K_POINTS':{'scheme':'automatic','x':2,'y':2,'z':2,'xs':0,'ys':0,'zs':0}
+    'K_POINTS':{'scheme':'automatic','x':2,'y':2,'z':2,'xs':0,'ys':0,'zs':0},
+    'CELL':{'cell_dynamics':'bfgs','cell_dofree':'all'}
     }
 
 # qeIpt is a class for reading and adjusting atomic arrangements, and writing input files for pw.x, pp.x, projwfc.x,
@@ -876,7 +876,7 @@ class qeIpt:
     # prepare input file for pw.x
     def prep_pwipt(self):
         fill = []
-        for k in ['CONTROL','SYSTEM','ELECTRONS','IONS']:
+        for k in ['CONTROL','SYSTEM','ELECTRONS','IONS','CELL']:
             temp = ""
             for n,v in self.defaultval[k].items():
                 if isinstance(v,(list,tuple)):
