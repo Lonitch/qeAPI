@@ -82,6 +82,41 @@ def cif_writer(filename,obj):
     write(filename,obj,format='cif')
     return
 
+def read_espresso_scf_force(fileobj):
+    """
+    Read forces from SCF calculations, use this when the ouput file is not complete.
+    """
+    if isinstance(fileobj, basestring):
+        fileobj = open(fileobj, 'rU')
+
+    # work with a copy in memory for faster random access
+    pwo_lines = fileobj.readlines()
+
+    # Index all the interesting points
+    indexes = {
+        _PW_FORCE: []
+    }
+
+    for idx, line in enumerate(pwo_lines):
+        for identifier in indexes:
+            if identifier in line:
+                indexes[identifier].append(idx)
+    # Forces
+    force_index = indexes[_PW_FORCE][0]
+    if not pwo_lines[force_index + 2].strip():
+        force_index += 4
+    else:
+        force_index += 2
+    # assume contiguous
+    forces = []
+    while 'atom' in pwo_lines[force_index]:
+        force_line = pwo_lines[force_index]
+        forces.append([float(x) for x in force_line.split()[-3:]])
+        force_index+=1
+    forces = np.array(forces) * units['Ry'] / units['Bohr']
+
+    return forces
+
 def read_espresso_out(fileobj, index=-1, results_required=True):
     """Reads Quantum ESPRESSO output files.
 
