@@ -9,7 +9,7 @@ Currently, this script prepares job files for scf/nscf/relax/bands/dos/pdos/char
 Created by Sizhe Liu @University of Illinois at Urbana-Champaign
 """
 
-import os, sys, stat
+import os, difflib, stat
 import glob,random
 
 
@@ -173,6 +173,8 @@ for file in files:
 	pbs.close()
 
 lb2 = int(100+random.random()*1000)
+record = {}
+# The first non-empty file list
 initflg = list(map(bool, filelst)).index(True)
 for i in range(len(filelst)):
 	for j in range(len(filelst[i])):
@@ -183,23 +185,27 @@ for i in range(len(filelst)):
 					jobs.write('JOB_{}=`sbatch {} |cut -f 4 -d " "`\n'.format(lb2, filelst[i][j]))
 					lb2+=1
 				elif int(repnum)>1:
-					print('"restart job" is sent into a job array, might cause running error!')
+					print('"restart job" will be sent into a job array, might cause running error!')
 					jobs.write('JOB_{}=`sbatch --array 1-{} --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,int(repnum),lb2-1,filelst[i][j]))
 					lb2+=1
 			else:
 				jobs.write('JOB_{}=`sbatch {} |cut -f 4 -d " "`\n'.format(lb2, filelst[i][j]))
+				record[filelst[i][j]]=lb2
 				lb2+=1
 		else:
-			jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,lb2-1,filelst[i][j]))
-			lb2+=1
 			if 'restart' in filelst[i][j]:
+				tkey = difflib.get_close_matches(filelst[i][j], list(record.keys()))[0]
+				jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record[tkey],filelst[i][j]))
 				repnum = input('how many times do you wanna restart it?(default is 1):')
 				if repnum=='' or repnum=='1':
 					continue
 				else:
 					print('"restart job" is sent into a job array, might cause running error!')
 					jobs.write('JOB_{}=`sbatch --array 1-{} --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,int(repnum),lb2-1,filelst[i][j]))
-					lb2+=1
+			else:
+				jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,lb2-1,filelst[i][j]))
+			
+			lb2+=1
 
 jobs.close()
 os.chmod(depname, stat.S_IRWXU)
