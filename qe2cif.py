@@ -40,6 +40,7 @@ units = create_units('2006')
 
 # Section identifiers
 _PW_START = 'Program PWSCF'
+_PW_WRITE_END = 'Writing output data file' #
 _PW_END = 'End of self-consistent calculation'
 _PW_CELL = 'CELL_PARAMETERS'
 _PW_POS = 'ATOMIC_POSITIONS'
@@ -117,7 +118,7 @@ def read_espresso_scf_force(fileobj):
 
     return forces
 
-def read_espresso_out(fileobj, index=-1, results_required=True):
+def read_espresso_out(fileobj, index=-1):
     """Reads Quantum ESPRESSO output files.
 
     The atomistic configurations as well as results (energy, force, stress,
@@ -132,11 +133,6 @@ def read_espresso_out(fileobj, index=-1, results_required=True):
         A file like object or filename
     index : slice
         The index of configurations to extract.
-    results_required : bool
-        If True, atomistic configurations that do not have any
-        associated results will not be included. This prevents double
-        printed configurations and incomplete calculations from being
-        returned as the final configuration with no results data.
 
     Yields
     ------
@@ -452,6 +448,270 @@ def read_espresso_out(fileobj, index=-1, results_required=True):
     else:
         return resconfig
 
+def read_espresso_end(fileobj):
+    """
+    Similar to "read_espresso_out" function but here we only collect
+    information of last image.
+    """
+    fileobj = open(fileobj, 'r')
+    # work with a copy in memory for faster random access
+    pwo_lines = fileobj.readlines()
+    indexes = {
+        _PW_START: [],
+        _PW_WRITE_END: [],
+        _PW_CELL: [],
+        _PW_POS: [],
+        _PW_MAGMOM: [],
+        _PW_FORCE: [],
+        _PW_TOTFORCE:[],# added by Sizhe
+        _PW_TOTEN: [],
+        _PW_STRESS: [],
+        _PW_PRESSURE: [],
+        _PW_FERMI: [],
+        _PW_HIGHEST_OCCUPIED: [],
+        _PW_HIGHEST_OCCUPIED_LOWEST_FREE: [],
+        _PW_KPTS: [],
+        _PW_BANDS: [],
+        _PW_BANDSTRUCTURE: [],
+    }
+
+    for idx, line in enumerate(pwo_lines):
+        for identifier in indexes:
+            if identifier in line:
+                indexes[identifier].append(idx)
+
+    # Find the start and the end of last image
+    all_config_indexes = sorted(indexes[_PW_WRITE_END])
+    start_index = all_config_indexes[-2]
+    end_index = all_config_indexes[-1]
+    i = start_index+1
+    pos_start = None
+    while start_index<i<=end_index:
+        if _PW_POS in pwo_lines[i]:
+            pos_start = i
+        if 'stopped' in pwo_lines[i]:
+            i+=end_index
+            start_index = all_config_indexes[-3]
+            end_index = all_config_indexes[-2]
+        i+=1
+    # Extract initialisation information each time PWSCF starts
+    # to add to subsequent configurations. Use None so slices know
+    # when to fill in the blanks.
+    pwscf_start_info = dict((idx, None) for idx in indexes[_PW_START])
+    resconfig=[]
+    if start_index in indexes[_PW_START]:
+        prev_start_index = start_index
+    else:
+        # The greatest start index before this structure
+        prev_start_index = [idx for idx in indexes[_PW_START]
+                            if idx < start_index][-1]
+
+    # add structure to reference if not there
+    if pwscf_start_info[prev_start_index] is None:
+        pwscf_start_info[prev_start_index] = parse_pwo_start(
+            pwo_lines, prev_start_index)
+
+    # Get the structure
+    # Use this for any missing data
+    prev_structure = pwscf_start_info[prev_start_index]['atoms']
+    if start_index in indexes[_PW_START] or not indexes[_PW_CELL]:
+        cell = prev_structure.cell
+        cell_alat = pwscf_start_info[prev_start_index]['alat']  # parsed from start info
+    else:
+        for c in indexes[_PW_CELL]:
+            if start_index<c<end_index:
+                cell, cell_alat = get_cell_parameters(pwo_lines[c:c+5])
+            else:
+                cell = prev_structure.cell
+                cell_alat = pwscf_start_info[prev_start_index]['alat']
+
+    if pos_start is None:
+        t1=all_config_indexes.index(start_index)
+        t2=all_config_indexes.index(end_index)
+        start_index = all_config_indexes[t1-1]
+        end_index = all_config_indexes[t2-1]
+        for c in indexes[_PW_POS]:
+            if start_index<c<end_index:
+                pos_start = c
+    n_atoms = len(prev_structure)
+    positions_card = get_atomic_positions(
+        pwo_lines[pos_start:pos_start + n_atoms + 1],
+        n_atoms=n_atoms, cell=cell, alat=cell_alat)
+    
+    # convert to Atoms object
+    symbols = [label_to_symbol(position[0]) for position in
+               positions_card]
+    positions = [position[1] for position in positions_card]
+
+    constraint_idx = [position[2] for position in positions_card]
+    constraint = get_constraint(constraint_idx)
+
+    structure = Atoms(symbols=symbols, positions=positions, cell=cell,
+                      constraint=constraint, pbc=True)
+
+    energy = None
+    for energy_index in indexes[_PW_TOTEN]:
+        if start_index < energy_index < end_index:
+            energy = float(
+                pwo_lines[energy_index].split()[-2]) * units['Ry']
+
+    # Forces
+    forces = None
+    for force_index in indexes[_PW_FORCE]:
+        if start_index < force_index < end_index:
+            # Before QE 5.3 'negative rho' added 2 lines before forces
+            # Use exact lines to stop before 'non-local' forces
+            # in high verbosity
+            if not pwo_lines[force_index + 2].strip():
+                force_index += 4
+            else:
+                force_index += 2
+            # assume contiguous
+            forces = [
+                [float(x) for x in force_line.split()[-3:]] for force_line
+                in pwo_lines[force_index:force_index + len(structure)]]
+            forces = np.array(forces) * units['Ry'] / units['Bohr']
+
+    # Total Force
+    totforce = None
+    for force_index in indexes[_PW_TOTFORCE]:
+        if start_index < force_index < end_index:
+            totforce = float(pwo_lines[force_index].split()[3])
+            totforce = totforce * units['Ry'] / units['Bohr']
+
+    # Cell Pressure
+    pressure = None
+    for press_index in indexes[_PW_PRESSURE]:
+        if start_index < press_index < end_index:
+            pressure = float(pwo_lines[press_index].split()[-1])
+
+    # Stress
+    stress = None
+    for stress_index in indexes[_PW_STRESS]:
+        if start_index < stress_index < end_index:
+            sxx, sxy, sxz = pwo_lines[stress_index + 1].split()[:3]
+            _, syy, syz = pwo_lines[stress_index + 2].split()[:3]
+            _, _, szz = pwo_lines[stress_index + 3].split()[:3]
+            stress = np.array([sxx, syy, szz, syz, sxz, sxy], dtype=float)
+            # sign convention is opposite of ase
+            stress *= -1 * units['Ry'] / (units['Bohr'] ** 3)
+
+    # Magmoms
+    magmoms = None
+    for magmoms_index in indexes[_PW_MAGMOM]:
+        if start_index < magmoms_index < end_index:
+            magmoms = [
+                float(mag_line.split()[5]) for mag_line
+                in pwo_lines[magmoms_index + 1:
+                             magmoms_index + 1 + len(structure)]]
+
+    # Fermi level / highest occupied level
+    efermi = None
+    for fermi_index in indexes[_PW_FERMI]:
+        if start_index < fermi_index < end_index:
+            efermi = float(pwo_lines[fermi_index].split()[-2])
+
+    if efermi is None:
+        for ho_index in indexes[_PW_HIGHEST_OCCUPIED]:
+            if start_index < ho_index < end_index:
+                efermi = float(pwo_lines[ho_index].split()[-1])
+
+    if efermi is None:
+        for holf_index in indexes[_PW_HIGHEST_OCCUPIED_LOWEST_FREE]:
+            if start_index < holf_index < end_index:
+                efermi = float(pwo_lines[holf_index].split()[-2])
+
+    # K-points
+    ibzkpts = None
+    weights = None
+    kpoints_warning = "Number of k-points >= 100: " + \
+                      "set verbosity='high' to print them."
+
+    for kpts_index in indexes[_PW_KPTS]:
+        nkpts = int(pwo_lines[kpts_index].split()[4])
+        kpts_index += 2
+
+        if pwo_lines[kpts_index].strip() == kpoints_warning:
+            continue
+
+        # QE prints the k-points in units of 2*pi/alat
+        # with alat defined as the length of the first
+        # cell vector
+        cell = structure.get_cell()
+        alat = np.linalg.norm(cell[0])
+        ibzkpts = []
+        weights = []
+        for i in range(nkpts):
+            l = pwo_lines[kpts_index + i].split()
+            weights.append(float(l[-1]))
+            coord = np.array([l[-6], l[-5], l[-4].strip('),')],
+                             dtype=float)
+            coord *= 2 * np.pi / alat
+            coord = kpoint_convert(cell, ckpts_kv=coord)
+            ibzkpts.append(coord)
+        ibzkpts = np.array(ibzkpts)
+        weights = np.array(weights)
+
+    # Bands
+    kpts = None
+    kpoints_warning = "Number of k-points >= 100: " + \
+                      "set verbosity='high' to print the bands."
+
+    for bands_index in indexes[_PW_BANDS] + indexes[_PW_BANDSTRUCTURE]:
+        if start_index < bands_index < end_index:
+            bands_index += 2
+            # deal with output variant when LDA+U calculation is used
+            if 'LDA+U parameters:' in pwo_lines[bands_index].strip():
+                while "N of occupied +U levels" not in pwo_lines[bands_index]:
+                    bands_index += 1
+                bands_index += 3
+
+            if pwo_lines[bands_index].strip() == kpoints_warning:
+                continue
+
+            assert ibzkpts is not None
+            spin, bands, eigenvalues = 0, [], [[], []]
+
+            while True:
+                l = pwo_lines[bands_index].replace('-', ' -').split()
+                if len(l) == 0:
+                    if len(bands) > 0:
+                        eigenvalues[spin].append(bands)
+                        bands = []
+                elif l == ['occupation', 'numbers']:
+                    # Skip the lines with the occupation numbers
+                    bands_index += len(eigenvalues[spin][0]) // 8 + 1
+                elif l[0] == 'k' and l[1].startswith('='):
+                    pass
+                elif 'SPIN' in l:
+                    if 'DOWN' in l:
+                        spin += 1
+                else:
+                    try:
+                        bands.extend(map(float, l))
+                    except ValueError:
+                        break
+                bands_index += 1
+
+            # if spin == 1:
+            #     assert len(eigenvalues[0]) == len(eigenvalues[1])
+            # assert len(eigenvalues[0]) == len(ibzkpts), (np.shape(eigenvalues), len(ibzkpts))
+
+            kpts = []
+            for s in range(spin + 1):
+                for w, k, e in zip(weights, ibzkpts, eigenvalues[s]):
+                    kpt = SinglePointKPoint(w, s, k, eps_n=e)
+                    kpts.append(kpt)
+
+    # Put everything together
+    # Changed by Sizhe
+    calc = SinglePointDFTCalculator(structure, energy=energy, totforce=totforce, efermi=efermi,
+                                    forces=forces, stress=stress, pressure=pressure,
+                                    magmoms=magmoms, ibzkpts=ibzkpts)
+    calc.kpts = kpts
+    structure.set_calculator(calc)
+
+    return structure
 
 def read_espresso_in(fileobj):
     """Parse a Quantum ESPRESSO input files, '.in', '.pwi'.
