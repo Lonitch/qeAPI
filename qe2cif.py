@@ -42,6 +42,7 @@ units = create_units('2006')
 _PW_START = 'Program PWSCF'
 _PW_WRITE_END = 'Writing output data file' #
 _PW_END = 'End of self-consistent calculation'
+_PW_FINAL = 'Final scf calculation'
 _PW_CELL = 'CELL_PARAMETERS'
 _PW_POS = 'ATOMIC_POSITIONS'
 _PW_MAGMOM = 'Magnetic moment per site'
@@ -458,6 +459,7 @@ def read_espresso_end(fileobj):
     pwo_lines = fileobj.readlines()
     indexes = {
         _PW_START: [],
+        _PW_FINAL:[],
         _PW_WRITE_END: [],
         _PW_CELL: [],
         _PW_POS: [],
@@ -484,6 +486,17 @@ def read_espresso_end(fileobj):
     all_config_indexes = sorted(indexes[_PW_WRITE_END])
     start_index = all_config_indexes[-2]
     end_index = all_config_indexes[-1]
+    short_flg = True
+    for idx in indexes[_PW_POS]:
+        if start_index<idx<end_index:
+            short_flg = False
+    if short_flg:
+        si,ei = -3,-2
+        start_index = all_config_indexes[si]
+        end_index = all_config_indexes[ei]
+    else:
+        si,ei = -2,-1
+
     i = start_index+1
     pos_start = None
     while start_index<i<=end_index:
@@ -491,14 +504,17 @@ def read_espresso_end(fileobj):
             pos_start = i
         if 'stopped' in pwo_lines[i]:
             i+=end_index
-            start_index = all_config_indexes[-3]
-            end_index = all_config_indexes[-2]
+            start_index = all_config_indexes[si-1]
+            end_index = all_config_indexes[ei-1]
+        elif 'Final scf calculation' in pwo_lines[i]:
+            i+=end_index
+            start_index = all_config_indexes[si-1]
+            end_index = all_config_indexes[ei-1]
         i+=1
     # Extract initialisation information each time PWSCF starts
     # to add to subsequent configurations. Use None so slices know
     # when to fill in the blanks.
     pwscf_start_info = dict((idx, None) for idx in indexes[_PW_START])
-    resconfig=[]
     if start_index in indexes[_PW_START]:
         prev_start_index = start_index
     else:
@@ -518,12 +534,13 @@ def read_espresso_end(fileobj):
         cell = prev_structure.cell
         cell_alat = pwscf_start_info[prev_start_index]['alat']  # parsed from start info
     else:
+        # print('{},{}'.format(start_index,end_index))
         for c in indexes[_PW_CELL]:
             if start_index<c<end_index:
                 cell, cell_alat = get_cell_parameters(pwo_lines[c:c+5])
-            else:
-                cell = prev_structure.cell
-                cell_alat = pwscf_start_info[prev_start_index]['alat']
+            # else:
+            #     cell = prev_structure.cell
+            #     cell_alat = pwscf_start_info[prev_start_index]['alat']
 
     if pos_start is None:
         t1=all_config_indexes.index(start_index)

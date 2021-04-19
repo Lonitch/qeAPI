@@ -56,6 +56,9 @@ ATOMIC_SPECIES
 {}
 K_POINTS {}
 {}
+
+CELL_PARAMETERS angstrom
+{}
 ATOMIC_POSITIONS angstrom
 {}
 
@@ -617,12 +620,12 @@ DEFAULTVAL = {
         'ntyp' : 7,
         'nat' : 20,
         'ibrav' : 14,
-        'A' : 7.22,
-        'B' : 7.22,
-        'C' : 7.22,
-        'cosAB' : 0.5,
-        'cosAC' : 0.5,
-        'cosBC' : 0.5,
+        # 'A' : 7.22,
+        # 'B' : 7.22,
+        # 'C' : 7.22,
+        # 'cosAB' : 0.5,
+        # 'cosAC' : 0.5,
+        # 'cosBC' : 0.5,
         'nspin' : 2,
         'degauss':1.00000e-02,
         'ecutwfc':40.0,
@@ -642,6 +645,7 @@ DEFAULTVAL = {
         'ion_dynamics':'bfgs'
         },
     'ATOMIC_SPECIES':{}, # a dict with each entry formulated as 'atom symbol':[atom mass, pseudopot name]
+    'CELL PARAMETERS':None,
     'K_POINTS':{'scheme':'automatic','x':2,'y':2,'z':2,'xs':0,'ys':0,'zs':0},
     'CELL':{'cell_dynamics':'bfgs','cell_dofree':'all'}
     }
@@ -788,7 +792,7 @@ class qeIpt:
         atyp = Counter(self.atoms.get_chemical_symbols())
         mass = Counter(self.atoms.get_masses())
         ntyp = len(atyp.keys())
-        cellen = self.atoms.get_cell_lengths_and_angles()
+        # cellen = self.atoms.get_cell_lengths_and_angles()
         self.atsymb = self.atoms.get_chemical_symbols()
         self.atpos = self.atoms.get_positions()
         self.atpos = np.round(self.atpos,8)
@@ -804,12 +808,13 @@ class qeIpt:
         
         self.defaultval['SYSTEM']['nat']=nat
         self.defaultval['SYSTEM']['ntyp']=ntyp
-        self.defaultval['SYSTEM']['A'] = np.round(cellen[0],8)
-        self.defaultval['SYSTEM']['B'] = np.round(cellen[1],8)
-        self.defaultval['SYSTEM']['C'] = np.round(cellen[2],8)
-        self.defaultval['SYSTEM']['cosAB'] = np.round(math.cos(cellen[3]/180*math.pi),8)
-        self.defaultval['SYSTEM']['cosAC'] = np.round(math.cos(cellen[4]/180*math.pi),8)
-        self.defaultval['SYSTEM']['cosBC'] = np.round(math.cos(cellen[5]/180*math.pi),8)
+        self.defaultval['CELL_PARAMETERS'] = np.array(self.atoms.get_cell())
+        # self.defaultval['SYSTEM']['A'] = np.round(cellen[0],8)
+        # self.defaultval['SYSTEM']['B'] = np.round(cellen[1],8)
+        # self.defaultval['SYSTEM']['C'] = np.round(cellen[2],8)
+        # self.defaultval['SYSTEM']['cosAB'] = np.round(math.cos(cellen[3]/180*math.pi),8)
+        # self.defaultval['SYSTEM']['cosAC'] = np.round(math.cos(cellen[4]/180*math.pi),8)
+        # self.defaultval['SYSTEM']['cosBC'] = np.round(math.cos(cellen[5]/180*math.pi),8)
         self.defaultval['SYSTEM']['nbnd'] = nbnd
         if not self.defaultval['ATOMIC_SPECIES']:
             for t,m in zip(atyp.keys(),mass.keys()):
@@ -916,6 +921,12 @@ class qeIpt:
                 fill+=[kpvals[0],' ']
             else:
                 fill+=[kpvals[0],' '.join([str(item) for item in kpvals[1:]])]
+
+        cellst = ""
+        for _x in range(3):
+            temp=self.defaultval['CELL_PARAMETERS'][_x]
+            cellst+="{} {} {}\n".format(temp[0],temp[1],temp[2])
+        fill.append(cellst)
 
         poslst = ""
         for p,n in zip(self.atpos,self.atsymb):
