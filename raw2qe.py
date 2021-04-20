@@ -795,7 +795,7 @@ class qeIpt:
         # cellen = self.atoms.get_cell_lengths_and_angles()
         self.atsymb = self.atoms.get_chemical_symbols()
         self.atpos = self.atoms.get_positions()
-        self.atpos = np.round(self.atpos,8)
+        # self.atpos = np.round(self.atpos,8)
         indices = defaultdict(list)
         for i,v in enumerate(self.atsymb):
             indices[v].append(i)
