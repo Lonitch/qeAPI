@@ -11,12 +11,12 @@ Currently, this script prepares job files for
 Created by Sizhe Liu @University of Illinois at Urbana-Champaign
 """
 
-import os, stat
+import os, stat, re
 import glob,random
 
 
 inbit = ''
-qe = ['mpirun  -np $SLURM_NTASKS pw.x -npool {} -input ','mpirun -np $SLURM_NTASKS dos.x -input ', 
+qe = ['mpirun  -np $SLURM_NTASKS pw.x -input ','mpirun -np $SLURM_NTASKS dos.x -input ', 
 'mpirun  -np $SLURM_NTASKS projwfc.x -input ', 
 'mpirun -np $SLURM_NTASKS pp.x -input ',
 'mpirun -np $SLURM_NTASKS bands.x -input ']
@@ -82,13 +82,20 @@ UNIX_LINE_ENDING = b'\n'
 
 for file in glob.glob(iptformat):
 
-	with open(file, 'rb') as f:
-		filedata = f.read()
-	filedata.replace(WINDOWS_LINE_ENDING, UNIX_LINE_ENDING)
+	with open(file, 'r') as f:
+		temp = f.readlines()
+	# filedata.replace(WINDOWS_LINE_ENDING, UNIX_LINE_ENDING)
 	f.close()
+	for i in range(len(temp)):
+		if 'outdir' in temp[i]:
+			tag = temp[i].split('/')[-1]
+			tag = re.sub('[^0-9a-zA-Z]','',tag)
+			temp[i]= 'outdir="/ocean/projects/phy210009p/sliu135/{}",\n'.format(tag)
+		elif 'pseudo_dir' in temp[i]:
+			temp[i]='pseudo_dir="/jet/home/sliu135/inputdir/pseudo/",\n'
 	# Write the file out again
-	with open(file, 'wb') as f:
-		f.write(filedata)
+	with open(file, 'w') as f:
+		f.write(''.join(temp))
 	f.close()
 	# we run jobs in a sequence of '(vc-)rlx->restart->bands/gw->band->nscf->dos->pdos->pp_rho'
 	tempstr = file[:-3]+'.sbatch'
