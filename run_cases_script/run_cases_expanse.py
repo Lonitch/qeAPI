@@ -11,7 +11,7 @@ Currently, this script prepares job files for
 Created by Sizhe Liu @University of Illinois at Urbana-Champaign
 """
 
-import os, stat
+import os, stat, re
 import glob,random
 
 
@@ -22,6 +22,10 @@ qe = [
 'mpirun  -np $SLURM_NTASKS projwfc.x -input ', 
 'mpirun -np $SLURM_NTASKS pp.x -input ',
 'mpirun -np $SLURM_NTASKS bands.x -input ']
+
+# output and pseudo dir 
+outdir = '/expanse/lustre/scratch/sliu135/temp_project'
+pseudodir = '/expanse/home/sliu135/inputdir/pseudo/SSSP_efficiency_pseudos/'
 
 # top for running jobs on expanse
 
@@ -94,14 +98,20 @@ UNIX_LINE_ENDING = b'\n'
 
 for file in glob.glob(iptformat):
 
-	with open(file, 'rb') as f:
-		filedata = f.read()
-	filedata.replace(WINDOWS_LINE_ENDING, UNIX_LINE_ENDING)
+	with open(file, 'r') as f:
+		temp = f.readlines()
+	# filedata.replace(WINDOWS_LINE_ENDING, UNIX_LINE_ENDING)
 	f.close()
+	for i in range(len(temp)):
+		if 'outdir' in temp[i]:
+			tag = temp[i].split('/')[-1]
+			tag = re.sub('[^0-9a-zA-Z]','',tag)
+			temp[i]= 'outdir="{}/{}",\n'.format(outdir,tag)
+		elif 'pseudo_dir' in temp[i]:
+			temp[i]='pseudo_dir="{}",\n'.format(pseudodir)
 	# Write the file out again
-	with open(file, 'wb') as f:
-		f.write(filedata)
-	f.close()
+	with open(file, 'w') as f:
+		f.write(''.join(temp))
 	# we run jobs in a sequence of '(vc-)rlx->restart->bands/gw->band->nscf->dos->pdos->pp_rho'
 	tempstr = file[:-3]+'.sbatch'
 	# tell me which files are found and will be generated!
