@@ -1,6 +1,6 @@
 """
 This script prepare files for submitting QE calculation jobs to a high-performance computational
-platform running on "slurm" system, and having python3 and intel LAPACK installed. 
+platform running on "slurm" system, and having python3 and Quantum ESPRESSO compiled. 
 
 !!!Please change the tring "top" if the platform environment you have access to is slightly different.
 
@@ -11,6 +11,7 @@ Created by Sizhe Liu @University of Illinois at Urbana-Champaign
 
 import os, difflib, stat
 import glob,random
+from collections import defaultdict
 
 
 inbit = ''
@@ -89,7 +90,7 @@ for file in files:
 	with open(file, 'wb') as f:
 		f.write(filedata)
 	f.close()
-	# we run jobs in a sequence of '(vc-)rlx->restart->bands/gw->band->nscf->dos->pdos->pp_rho'
+	# we run jobs in a sequence of '(vc-)rlx->restart->nscf->bands/gw->band->dos->pdos->pp_rho'
 	tempstr = file[:-3]+'.sbatch'
 	# tell me which files are found and will be generated!
 	print("{}:{}".format(file,tempstr))
@@ -113,7 +114,7 @@ for file in files:
 					qemachine=qe[0].format(ndnum)
 				p+=len(filedata)
 			p+=1
-		filelst[4].append(tempstr)
+		filelst[2].append(tempstr)
 	elif 'pp' in tempstr:
 		qemachine=qe[3]
 		filelst[7].append(tempstr)
@@ -134,7 +135,7 @@ for file in files:
 		filelst[1].append(tempstr)
 	elif 'band' in tempstr and 'bands' not in tempstr:
 		qemachine=qe[4]
-		filelst[3].append(tempstr)
+		filelst[4].append(tempstr)
 	elif 'bands' in tempstr:
 		with open(file, 'r') as f:
 			filedata = f.readlines()
@@ -149,7 +150,7 @@ for file in files:
 					qemachine=qe[0].format(ndnum)
 				p+=len(filedata)
 			p+=1
-		filelst[2].append(tempstr)
+		filelst[3].append(tempstr)
 	else:
 		with open(file, 'r') as f:
 			filedata = f.readlines()
@@ -173,7 +174,7 @@ for file in files:
 	pbs.close()
 
 lb2 = int(100+random.random()*1000)
-record = {}
+record = defaultdict(dict)
 # The first non-empty file list
 initflg = list(map(bool, filelst)).index(True)
 for i in range(len(filelst)):
@@ -190,21 +191,67 @@ for i in range(len(filelst)):
 					lb2+=1
 			else:
 				jobs.write('JOB_{}=`sbatch {} |cut -f 4 -d " "`\n'.format(lb2, filelst[i][j]))
-				record[filelst[i][j]]=lb2
+				record['scf'][filelst[i][j]]=lb2
 				lb2+=1
 		else:
 			if 'restart' in filelst[i][j]:
-				tkey = difflib.get_close_matches(filelst[i][j], list(record.keys()))[0]
-				jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record[tkey],filelst[i][j]))
+				tkey = difflib.get_close_matches(filelst[i][j], list(record['scf'].keys()))[0]
+				jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record['scf'][tkey],filelst[i][j]))
+				record['scf'][filelst[i][j]]=lb2
 				repnum = input('how many times do you wanna restart it?(default is 1):')
 				if repnum=='' or repnum=='1':
 					continue
 				else:
 					print('"restart job" is sent into a job array, might cause running error!')
 					jobs.write('JOB_{}=`sbatch --array 1-{} --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,int(repnum),lb2-1,filelst[i][j]))
-			else:
-				jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,lb2-1,filelst[i][j]))
-			
+			elif 'nscf' in filelst[i][j]:
+				tkey = difflib.get_close_matches(filelst[i][j], list(record['scf'].keys()))[0]
+				jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record['scf'][tkey],filelst[i][j]))
+				record['nscf'][filelst[i][j]]=lb2
+			elif 'bands' in filelst[i][j]:
+				tkey = difflib.get_close_matches(filelst[i][j], list(record['nscf'].keys()))[0]
+				jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record['nscf'][tkey],filelst[i][j]))
+				record['bands'][filelst[i][j]]=lb2
+			elif 'band' in filelst[i][j]:
+				tkey = difflib.get_close_matches(filelst[i][j], list(record['bands'].keys()))[0]
+				jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record['bands'][tkey],filelst[i][j]))
+				record['band'][filelst[i][j]]=lb2
+			elif 'dos' in filelst[i][j] and 'pdos' not in filelst[i][j]:
+				if not record['band'] and not record['bands']:
+					tkey = difflib.get_close_matches(filelst[i][j], list(record['nscf'].keys()))[0]
+					jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record['nscf'][tkey],filelst[i][j]))
+				elif not record['band']:
+					tkey = difflib.get_close_matches(filelst[i][j], list(record['bands'].keys()))[0]
+					jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record['bands'][tkey],filelst[i][j]))
+				elif record['band']:
+					tkey = difflib.get_close_matches(filelst[i][j], list(record['band'].keys()))[0]
+					jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record['band'][tkey],filelst[i][j]))
+				else:
+					print('No dos will start before you do nscf calculations!!!')
+				record['dos'][filelst[i][j]]=lb2
+			elif 'pdos' in filelst[i][j]:
+				if not record['dos'] and not record['band'] and not record['bands']:
+					tkey = difflib.get_close_matches(filelst[i][j], list(record['nscf'].keys()))[0]
+					jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record['nscf'][tkey],filelst[i][j]))
+				elif not record['dos'] and not record['band']:
+					tkey = difflib.get_close_matches(filelst[i][j], list(record['bands'].keys()))[0]
+					jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record['bands'][tkey],filelst[i][j]))
+				elif not record['dos']:
+					tkey = difflib.get_close_matches(filelst[i][j], list(record['band'].keys()))[0]
+					jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record['band'][tkey],filelst[i][j]))
+				elif record['dos']:
+					tkey = difflib.get_close_matches(filelst[i][j], list(record['dos'].keys()))[0]
+					jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,record['dos'][tkey],filelst[i][j]))
+				else:
+					print('No pdos will start before you do nscf calculations!!!')
+				record['pdos'][filelst[i][j]]=lb2
+			elif 'pp' in filelst[i][j]:
+				if not record['pp']:
+					jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,lb2-1,filelst[i][j]))
+				else:
+					fstpp = min(record['pp'].values())
+					jobs.write('JOB_{}=`sbatch --dependency=afterany:$JOB_{} {} |cut -f 4 -d " "`\n'.format(lb2,fstpp-1,filelst[i][j]))
+				record['pp'][filelst[i][j]]=lb2
 			lb2+=1
 
 jobs.close()
