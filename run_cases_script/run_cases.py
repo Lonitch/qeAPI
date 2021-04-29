@@ -24,7 +24,7 @@ top = """#!/bin/bash
 #SBATCH --job-name="bands"
 #SBATCH --partition={}
 
-module load openmpi/4.0.5-gcc-7.2.0
+module load openmpi/4.1.0-gcc-7.2.0
 cd {}
 
 
