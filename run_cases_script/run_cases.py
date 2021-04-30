@@ -21,10 +21,11 @@ top = """#!/bin/bash
 #SBATCH -n {}
 #SBATCH -N {}
 #SBATCH --time={}:{}:00
+#SBATCH --constraint="IB"
 #SBATCH --job-name="bands"
 #SBATCH --partition={}
 
-module load openmpi/4.1.0-gcc-7.2.0
+module load openmpi/4.1.0-gcc-7.2.0-pmi2
 cd {}
 
 
