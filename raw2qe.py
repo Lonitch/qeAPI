@@ -801,10 +801,10 @@ class qeIpt:
             indices[v].append(i)
 
         # calculate number of bands (electronNum/2*1.2)
-        nbnd = 0
-        for k in atyp.keys():
-            nbnd+=read_atomInfo(k)['number']*atyp[k]
-        nbnd = int(nbnd/2+16)
+        # nbnd = 0
+        # for k in atyp.keys():
+        #     nbnd+=read_atomInfo(k)['number']*atyp[k]
+        # nbnd = int(nbnd/2+16)
         
         self.defaultval['SYSTEM']['nat']=nat
         self.defaultval['SYSTEM']['ntyp']=ntyp
@@ -815,7 +815,7 @@ class qeIpt:
         # self.defaultval['SYSTEM']['cosAB'] = np.round(math.cos(cellen[3]/180*math.pi),8)
         # self.defaultval['SYSTEM']['cosAC'] = np.round(math.cos(cellen[4]/180*math.pi),8)
         # self.defaultval['SYSTEM']['cosBC'] = np.round(math.cos(cellen[5]/180*math.pi),8)
-        self.defaultval['SYSTEM']['nbnd'] = nbnd
+        # self.defaultval['SYSTEM']['nbnd'] = nbnd
         if not self.defaultval['ATOMIC_SPECIES']:
             for t,m in zip(atyp.keys(),mass.keys()):
                 self.defaultval['ATOMIC_SPECIES'][t]=[np.round(m,8),t+'.upf']
@@ -823,8 +823,8 @@ class qeIpt:
         # update defaultval dict from customized dictionary
         for k in custom_dict.keys():
             if k=='SYSTEM':
-                for tk in ['hubbard_u','starting_magnetization','starting_charge']:
-                    if tk in custom_dict[k].keys():
+                for tk in custom_dict[k].keys():
+                    if tk in ['hubbard_u','starting_magnetization','starting_charge']:
                         atyplst=list(atyp.keys())
                         if tk not in self.defaultval[k].keys():
                             self.defaultval[k][tk] = []
@@ -834,6 +834,8 @@ class qeIpt:
                         for item in custom_dict[k][tk]:
                             tempdict[atyplst.index(item[0])+1]=item[1]
                         self.defaultval[k][tk]=list(tempdict.items())
+                    else:
+                        self.defaultval[k][tk]=custom_dict[k][tk]
             else:
                 self.defaultval[k].update(custom_dict[k])
         # update prefix and outdir
