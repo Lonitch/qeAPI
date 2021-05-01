@@ -822,45 +822,20 @@ class qeIpt:
 
         # update defaultval dict from customized dictionary
         for k in custom_dict.keys():
-            self.defaultval[k].update(custom_dict[k])
             if k=='SYSTEM':
-                for tk in ['hubbard_u','starting_magnetization']:
+                for tk in ['hubbard_u','starting_magnetization','starting_charge']:
                     if tk in custom_dict[k].keys():
                         atyplst=list(atyp.keys())
-                        self.defaultval[k][tk]=[]
+                        if tk not in self.defaultval[k].keys():
+                            self.defaultval[k][tk] = []
+                            tempdict = defaultdict()
+                        else:
+                            tempdict = dict(self.defaultval[k][tk])
                         for item in custom_dict[k][tk]:
-                            self.defaultval[k][tk].append((atyplst.index(item[0])+1,item[1]))
-                # add starting charge on specific atoms in a large configuration/supercell
-                if 'starting_charge' in custom_dict[k].keys():
-                    self.defaultval['SYSTEM']['starting_charge']=[]
-                    if isinstance(custom_dict[k]['starting_charge'],list):
-                        for item in custom_dict[k]['starting_charge']:
-                            s,c,u = item #symbol, charge, which unit cell
-                            self.defaultval['SYSTEM']['ntyp']+=1
-                            # the atom with charge will be renamed as "X1" with X being atomic symbol
-                            self.defaultval['ATOMIC_SPECIES'][s+'1']=[read_atomInfo(s)['atomic_mass'],s]
-                            self.defaultval['SYSTEM']['starting_charge'].append((self.defaultval['SYSTEM']['ntyp'],c))
-                            self.atsymb[indices[s][u-1]]=s+'1'
-                            # set hubbard_U and starting magnetization params for charged atoms if possible
-                            atypidx=list(atyp.keys()).index(s)+1
-                            for tk in ['hubbard_u','starting_magnetization']:
-                                tempdic = dict(self.defaultval['SYSTEM'][tk])
-                                if atypidx in list(tempdic.keys()):
-                                    self.defaultval['SYSTEM'][tk].append((self.defaultval['SYSTEM']['ntyp'],tempdic[atypidx]))
-                    elif isinstance(custom_dict[k]['starting_charge'],tuple):
-                        s,c,u = custom_dict[k]['starting_charge']
-                        self.defaultval['SYSTEM']['ntyp']+=1
-                        # the atom with charge will be renamed as "X1" with X being atomic symbol
-                        self.defaultval['ATOMIC_SPECIES'][s+'1']=[read_atomInfo(s)['atomic_mass'],s]
-                        self.defaultval['SYSTEM']['starting_charge'].append((self.defaultval['SYSTEM']['ntyp'],c))
-                        self.atsymb[indices[s][u-1]]=s+'1'
-                        # set hubbard_U and starting magnetization params for charged atoms if possible
-                        atypidx=list(atyp.keys()).index(s)+1
-                        for tk in ['hubbard_u','starting_magnetization']:
-                            tempdic = dict(self.defaultval['SYSTEM'][tk])
-                            if atypidx in list(tempdic.keys()):
-                                self.defaultval['SYSTEM'][tk].append((self.defaultval['SYSTEM']['ntyp'],tempdic[atypidx]))
-
+                            tempdict[atyplst.index(item[0])+1]=item[1]
+                        self.defaultval[k][tk]=list(tempdict.items())
+            else:
+                self.defaultval[k].update(custom_dict[k])
         # update prefix and outdir
         if self.defaultval['CONTROL']['prefix'] not in self.defaultval['CONTROL']['outdir']:
             self.defaultval['CONTROL']['outdir']=os.path.join(self.defaultval['CONTROL']['outdir'],
@@ -868,8 +843,9 @@ class qeIpt:
 
     def delete_entry(self,entries):
         # This function is used to delete entries in self.defaultval.
-        # the argument "entries" is a list of tuple with first and second element being panel name and option name
-        # respectively. For example, the commend below delete the 'input_dft' option in 'SYSTEM' panel
+        # the argument "entries" is a list of tuple with first and second element being panel name 
+        # and option name respectively. For example, the commend below delete the 'input_dft' option 
+        # in 'SYSTEM' panel
         #
         # obj.delete_entry([('SYSTEM','input_dft')])
         # 
@@ -906,7 +882,7 @@ class qeIpt:
         # nscf calc is precursory calculation for dos/pdos and perturbative calc.
         # The K-point scheme is supposed to be much denser than those for relax calc. The code below 
         elif self.defaultval['CONTROL']['calculation']=='nscf':
-            cellen = self.atoms.get_cell_lengths_and_angles()[0]
+            cellen = self.atoms.cell.cellpar()[0]
             kn = math.ceil(cellen/0.8)
             self.defaultval['K_POINTS']['x']=kn
             self.defaultval['K_POINTS']['y']=kn
@@ -1040,7 +1016,7 @@ class qeIpt:
     def prep_phipt(self,usrdir=None):
         print('Input for SCF calc with dense K point scheme is also prepared!')
         self.defaultval['CONTROL']['calculation']='scf'
-        a = self.atoms.get_cell_lengths_and_angles()[0]
+        a = self.atoms.cell.cellpar()[0]
         kn = math.floor(a/0.8)
         self.defaultval['K_POINTS']['x']=kn
         self.defaultval['K_POINTS']['y']=kn

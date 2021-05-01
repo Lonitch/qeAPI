@@ -14,7 +14,13 @@ import glob,os,time
 keyword = input('Tell me a keyword in output file names:')
 files = glob.glob('*{}*.out'.format(keyword))
 ans = input('Remove slurm-related output files?(Y/N):')
-
+print('Tell me the shortest time interval between now and '+ 
+'the latest modification time of the jobs for restart (default is 1hrs).')
+latest = input('Type it here: ')
+if latest == '':
+    latest = 1
+else:
+    latest = int(latest)
 # Things you don't want to see at the end of output files
 check = ['convergence NOT achieved','%%%%%']
 # Thins you want to see them all at the end of complete output files
@@ -35,13 +41,13 @@ for i,f in enumerate(files):
     
     else:
         temp = content[-200:]
-        checklst = [False for i in range(len(check))]
         for i, c in enumerate(check):
             if any([c in t for t in temp]):
-                checklst[i]=True
-        if any(checklst):
-            mdlst.append('.'.join(f.split('.')[:-1]+['in']))
-            kpflg = True
+                tempname = '.'.join(f.split('.')[:-1]+['in'])
+                if tempname not in mdlst:
+                    mdlst.append(tempname)
+                kpflg = True
+
         checklst = [False for i in range(len(check2))]
         for i, c2 in enumerate(check2):
             if any([c2 in t for t in temp]):
@@ -50,8 +56,8 @@ for i,f in enumerate(files):
                 checklst[i] = False
         if not all(checklst):
             kpflg = True
-# incomplete output files that are last modified 4hrs ago are ready to be restarted
-    if kpflg and (time.time()-os.stat(f).st_mtime)/3600>4:
+# incomplete output files that are last modified x hrs ago are ready to be restarted
+    if kpflg and (time.time()-os.stat(f).st_mtime)/3600>latest:
         rslst.append('.'.join(f.split('.')[:-1]+['in']))
 
     if not kpflg:
@@ -72,7 +78,7 @@ rsfile.close()
 # in order to make calculation converge
 mdfile = open('modify.txt','w')
 for m in mdlst:
-    mdfile.write(r+'\n')
+    mdfile.write(m+'\n')
 mdfile.close()
 
 # Create a txt file that keeps names of complete output files in "complete.txt" file

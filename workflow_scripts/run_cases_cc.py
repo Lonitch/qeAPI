@@ -1,6 +1,6 @@
 """
-This script prepare files for submitting QE calculation jobs to a high-performance computational
-platform running on "slurm" system, and having python3 and Quantum ESPRESSO compiled. 
+This script prepare files for submitting QE calculation jobs to a HPC platform 
+running on "slurm" system (i.e. campuscluster at NCSA).
 
 !!!Please change the tring "top" if the platform environment you have access to is slightly different.
 
