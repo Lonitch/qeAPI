@@ -72,6 +72,9 @@ for i,f in enumerate(files):
 rsfile = open('restart.txt','w')
 for r in rslst:
     rsfile.write(r+'\n')
+for m in mdlst:
+    if m not in rslst:
+        rsfile.write(m+'\n')
 rsfile.close()
 
 # Create a text file that keeps names of input files that need their parameters modified

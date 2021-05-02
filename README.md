@@ -1,18 +1,18 @@
 # Python-QE API
->**Update @05/01**: collect useful scripts in the folder `workflow_scripts` for running
+>**Update @05/01/21**: collect useful scripts in the folder `workflow_scripts` for running
 batch jobs on different HPC platform.
 
->**Update @04/21**: updated `run_cases.py` for running multi-node jobs on HPC server configured with the slurm system.
+>**Update @04/21/21**: updated `run_cases.py` for running multi-node jobs on HPC server configured with the slurm system.
 
->**Update @01/21**: updated README to clarify some aspects of running jobs on slurm system.
+>**Update @01/21/21**: updated README to clarify some aspects of running jobs on slurm system.
 
->**Update @12/28**: due to the change of system environment on campuscluster, `run_cases.py`,`run_cases_bridges2.py` and `run_cases_phonon.py` in the folder `run_cases_script` are updated for submitting jobs to SLURM batch system.
+>**Update @12/28/20**: due to the change of system environment on campuscluster, `run_cases.py`,`run_cases_bridges2.py` and `run_cases_phonon.py` in the folder `run_cases_script` are updated for submitting jobs to SLURM batch system.
 
->**Update @12/22**: add interactive commands in `run_cases.py` to ask users if they want to change information of node number, core number per node, and walltime in `.pbs` file.
+>**Update @12/22/20**: add interactive commands in `run_cases.py` to ask users if they want to change information of node number, core number per node, and walltime in `.pbs` file.
 
->**Update @ 12/15**: (1) edited the "singlePointCalculator" class in qe2cif.py, enabling it reading total force and cell pressure; (2) updated "run_cases.py" so that 'restart' input file can also be submitted to computing platform.
+>**Update @12/15/20**: (1) edited the "singlePointCalculator" class in qe2cif.py, enabling it reading total force and cell pressure; (2) updated "run_cases.py" so that 'restart' input file can also be submitted to computing platform.
 
->**Update on 06/22**: (1)fixed typos in `prep_ppipt`,`prep_dosipt`,and `prep_pdosipt`,(2)add job dependency in `run_cases.py`,(3) finished the tests on `qe2DDEC.py`.
+>**Update @06/22/20**: (1)fixed typos in `prep_ppipt`,`prep_dosipt`,and `prep_pdosipt`,(2)add job dependency in `run_cases.py`,(3) finished the tests on `qe2DDEC.py`.
 
 Some useful tools are listed here for preparing and analyzing DFT calculations using Quantum Espresso. This repository(or **repo**) contains three pieces of Python scripts:
 
@@ -40,6 +40,7 @@ The sections below are arranged as
 - [Submit Calculation jobs](#submit-calculation-jobs)        
     - [!!! The workflow for running calculations](#-the-workflow-for-running-calculations)
     - [Useful command for running jobs on a slurm system](#useful-command-for-running-jobs-on-a-slurm-system)
+    - [Useful scripts for running batch jobs on a slurm system](#useful-scripts-for-running-batch-jobs-on-a-slurm-system)
 - [Navigation of the Repo](#navigation-of-the-repo)
 - [Citation](#citation)
 
@@ -184,21 +185,32 @@ where
 
 ### !!! The workflow for running calculations
 1. Upload all your input files to `inputdir` folder
-2. Make sure `run_cases.py` is also in the `inputdir` folder and load python3 module by `module load python/3`
-3. Run `run_cases.py` by `python3 run_cases.py`. This is a piece of interactive code, and it will ask you several questions before it generates `sbatch` files. The questions are shown in the picture blow.
+2. Make sure `run_cases_xxx.py` is also in the `inputdir` folder and load python3 module by `module load python/3`. 
+>Please use `run_cases_cc.py` on NCSA campuscluster and use `run_cases_expanse.py` on expanse@XSEDE. If you don't have access to none of these HPC platform, you might consider modify `run_cases_cc.py` to fit your needs.
+3. Run `run_cases_xxx.py` by `python3 run_cases.py`. This is a piece of interactive code, and it will ask you several questions before it generates `sbatch` files. The questions are shown in the picture blow.
+
 ![run_cases](images/run_cases.PNG)
-The last question shown above is asking to which queue you want to submit your jobs to. If you're a student in engineering department, you can type `beckman`, `eng-research` or `secondary`(a common queue for everybody). After these questions, the code will spite out the names of input files and sbatch files. The interaction with `run_cases_phonon.py` is slightly different. It will ask you one more question like the picture shown below. If your answer to the last question is larger than 2, the code will create job-array command to run `ph.x`-related job repeatedly. For some reason, `job-array` is at its beta version, so some mysterious computation errors might occur.
+
+The last question shown above is asking to which queue you want to submit your jobs to. If you're an engineering student at UIUC, you may type `beckman`, `eng-research` or `secondary`(a common queue for everybody). After these questions, the code will spite out the names of input files and sbatch files. The interaction with `run_cases_phonon.py` is slightly different. It will ask you one more question like the picture shown below. If your answer to the last question is larger than 2, the code will create job-array command to run `ph.x`-related job repeatedly. For some reason, `job-array` is at its beta version on slurm system, so some mysterious computation errors might occur.
 
 ![run_phonon](images/run_phonon.PNG)
 
 4. Many `sbatch` files should be created now, run `./serialjob` in your command line to submit all your jobs.
 5. Wait till `./serialjob` command finishes and use `squeue -u yourNetID` to check the status of your jobs. 
 6. Jobs with `C` status are finished or they are running out of the walltime. Jobs with `R` are running, and jobs with `PD` status are still pending in the queue.
-7. Once all your calculations are done, download your data and use the functions in `qe2DDEC.py` and `qe2cif.py` to start your analysis.
+7. Once all your calculations are done, download your data and use the functions in `qe2DDEC.py` or `qe2cif.py` to start your analysis.
 
 ### Useful command for running jobs on a slurm system
 1. `scancel JOBID` for canceling a job using its job id.
 2. `squeue -u usrID` for checking your job status using your userID
+3. `squeue -u usrID -p xxxxx` for checking your job status on partition `xxxxx`
+4. `sbatch xxxx.sbatch` submit a job using a `sbatch` file
+5. `sbatch --exclude cccc xxxxx.sbatch` submit a job by avoiding using node `cccc`
+
+### Useful scripts for running batch jobs on a slurm system
+Submitting a large number of jobs at the same time can be messy. Platform configuration errors could happen anytime, resulting mysterious termination and unfinished jobs. If you want to keep everything organized, you might want to use the scripts provided in the folder `workflow_scripts`. If you want to know more or change these scripts, you will get a better idea about them by reading the summaries at the top of these scripts. A recommended workflow for running large batch of jobs on HPC platform is shown in the flowchart below.
+
+![workflow](workflow_scripts/workflow.png)
  
 ## Navigation of the Repo
 >**Important note:** Please pay attention to the comment lines starting with **!!!** in the code. Those lines tell you how to change the code if you're using different pseudopotential or you are using it in different operating system environment.
