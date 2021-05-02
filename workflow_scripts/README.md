@@ -14,4 +14,4 @@ The script `rmopt.py` removes output files with their names listed in `restart.t
 ### A recommended workflow:
 Enjoy the chart below!
 
-![workflow](workflow.png)
+<img src="workflow.png" alt="workflow" style="width:200px;"/>
