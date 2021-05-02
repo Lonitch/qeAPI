@@ -12,4 +12,6 @@ The script `opt_check.py` should be run after `opt_check.py`. It modifies settin
 The script `rmopt.py` removes output files with their names listed in `restart.txt`. Note that running this script is **optional** for job submission workflow. It simply makes your file system look slightly cleaner.
 
 ### A recommended workflow:
-`run_cases_xxx.py`->`./serialjob`->after a while->`opt_check.py`->`ipt_modify.py`(optional)->`rmopt.py`(optional)->`run_cases_xxx.py`->`./serialjob`
+Enjoy the chart below!
+
+![workflow](images/workflow.png)
