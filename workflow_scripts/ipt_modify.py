@@ -53,12 +53,6 @@ else:
         else:
             break
 
-        boolst = ['True','true','TRUE','False','false','FALSE']
-        if any([_a in v for _a in boolst]):
-            if 'T' in v or 't' in v:
-                v = '.TRUE.'
-            else:
-                v = '.FLASE.'
         if len(templst)==3:
             usrdict[k] = (oldv,v)
         else:
