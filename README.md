@@ -1,18 +1,4 @@
 # Python-QE API
->**Update @05/01/21**: collect useful scripts in the folder `workflow_scripts` for running
-batch jobs on different HPC platform.
-
->**Update @04/21/21**: updated `run_cases.py` for running multi-node jobs on HPC server configured with the slurm system.
-
->**Update @01/21/21**: updated README to clarify some aspects of running jobs on slurm system.
-
->**Update @12/28/20**: due to the change of system environment on campuscluster, `run_cases.py`,`run_cases_bridges2.py` and `run_cases_phonon.py` in the folder `run_cases_script` are updated for submitting jobs to SLURM batch system.
-
->**Update @12/22/20**: add interactive commands in `run_cases.py` to ask users if they want to change information of node number, core number per node, and walltime in `.pbs` file.
-
->**Update @12/15/20**: (1) edited the "singlePointCalculator" class in qe2cif.py, enabling it reading total force and cell pressure; (2) updated "run_cases.py" so that 'restart' input file can also be submitted to computing platform.
-
->**Update @06/22/20**: (1)fixed typos in `prep_ppipt`,`prep_dosipt`,and `prep_pdosipt`,(2)add job dependency in `run_cases.py`,(3) finished the tests on `qe2DDEC.py`.
 
 Some useful tools are listed here for preparing and analyzing DFT calculations using Quantum Espresso. This repository(or **repo**) contains three pieces of Python scripts:
 
@@ -208,7 +194,7 @@ The last question shown above is asking to which queue you want to submit your j
 5. `sbatch --exclude cccc xxxxx.sbatch` submit a job by avoiding using node `cccc`
 
 ### Useful scripts for running batch jobs on a slurm system
-Submitting a large number of jobs at the same time can be messy. Platform configuration errors could happen anytime, resulting mysterious termination and unfinished jobs. If you want to keep everything organized, you might want to use the scripts provided in the folder `workflow_scripts`. If you want to know more or change these scripts, you will get a better idea about them by reading the summaries at the top of these scripts. A recommended workflow for running large batch of jobs on HPC platform is shown in the flowchart below.
+Submitting a large number of jobs at the same time can be messy. Platform configuration errors could happen at anytime, resulting in mysterious termination and unfinished jobs. If you want to keep everything organized, you might want to use the scripts provided in the folder `workflow_scripts`. If you want to know more or change these scripts, you will get a better idea about them by reading the summary at the top of each scripts. A recommended workflow for running large batch of jobs on HPC platform is shown in the flowchart below.
 
 ![workflow](workflow_scripts/workflow.png)
  
