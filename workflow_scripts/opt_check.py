@@ -38,6 +38,9 @@ for i,f in enumerate(files):
         cc.close()
     if len(content)<200:
         kpflg=True # flag for keeping input files
+        tempname = '.'.join(f.split('.')[:-1]+['in'])
+        if tempname not in mdlst:
+            mdlst.append(tempname)
     
     else:
         temp = content[-200:]
