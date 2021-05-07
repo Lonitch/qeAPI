@@ -5,6 +5,10 @@ that have "not converged" issue at the end. This script will read the file names
 "modify.txt" or "restart.txt" and replace substring in the input files based on 
 user-defined tuples.
 
+Note that if your first input is neither 'r' nor 'm', the code will rewrite 'restart.txt'
+with the file names that have your input as part of them. And the code replaces substrings
+in the files listed in the new 'restart.txt'.
+
 Each tuple has a format of `old substring,new substring`. If the `old substring` appears
 multiple times in input files, you can specify name of the setting that uses 
 `old substring` by defining a tuple as `setting name, old substring, new substring`.
@@ -12,10 +16,10 @@ multiple times in input files, you can specify name of the setting that uses
 To use this script, simply copy it to the folder where you save both input and 
 output files and run "python3 ipt_modify.py"
 
-Created/maintained by Sizhe Liu @ 4/30/2021
+Created/maintained by Sizhe Liu @ UIUC
 """
 
-import os
+import os, glob
 from collections import defaultdict
 
 print('Tell me which file to look into: "m" for modify.txt and "r" for restart.txt')
@@ -25,7 +29,13 @@ if look =='m':
 elif look =='r':
     look = 'restart.txt'
 else:
-    print('You just gave me a wrong input')
+    print('You just gave me a different input, I will rewrite restart.txt '+
+    'with the file names that have your input string in them.')
+    files = glob.glob('*'+look+'*.in')
+    with open(os.path.join(os.getcwd(),'restart.txt'),'w') as f:
+        f.write('\n'.join(files))
+    f.close()
+    look = 'restart.txt'
 
 pwd = os.getcwd()
 good = False

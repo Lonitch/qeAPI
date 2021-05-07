@@ -19,7 +19,7 @@ qe = ['mpirun --map-by node ./pw.x -npool {} -in','mpirun ./dos.x -in', 'mpirun 
 'mpirun ./pp.x -in','./bands.x -in','mpirun -np {} ./gw.x -npool {} -nimage {} -in']
 top = """#!/bin/bash
 #SBATCH -n {}
-#SBATCH -N {}
+# SBATCH -N {}
 #SBATCH --time={}:{}:00
 #SBATCH --constraint="IB"
 #SBATCH --job-name="bands"
