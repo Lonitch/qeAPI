@@ -911,7 +911,7 @@ class qeIpt:
             poslst+="  {} {} {} {}\n".format(n,p[0],p[1],p[2])
         fill.append(poslst)
 
-        if 'restart_mode' in self.defaultval['CONTROL'].keys():
+        if 'restart_mode' in self.defaultval['CONTROL'].keys() and self.defaultval['CONTROL']['restart_mode']=='restart':
             temp = self.defaultval['CONTROL']['prefix']+'_'+self.defaultval['CONTROL']['calculation']+'_restart.in'
             fn = open(os.path.join(self.svpath,temp), "w")
         else:
