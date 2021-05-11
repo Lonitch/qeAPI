@@ -20,8 +20,11 @@ keyword = input('Tell me a keyword in output file names:')
 files = glob.glob('*{}*.out'.format(keyword))
 ans = input('Remove slurm-related output files?(Y/N):')
 ans2 = input('Remove input files of complete jobs?(Y/N):')
+# SCF iteration marker
+marker = 'iteration #  1'
 # Things you don't want to see at the end of output files
-check = ['convergence NOT achieved','Error']
+# The second string in the list below is usually followed by error messages.
+check = ['convergence NOT achieved','%%%%%%']
 # When the following things shown at end of the outputs, we restart the cases.
 # To see "Maximum CPU time exceeded" in the outputs, 
 # please set 'max_seconds' in your input files to be less than the max walltime.
@@ -48,11 +51,15 @@ for i,f in enumerate(files):
     else:
         temp = content
         checkdict = defaultdict(list)
-        totcheck = check+check1+check2
+        totcheck = check+check1+check2+[marker]
         for i,t in enumerate(temp):
             for c in totcheck:
                 if c in t:
                     checkdict[c].append(i)
+        # We check various messages during the last SCF iteraction
+        maxmarker = max(checkdict[marker])
+        for c in check+check1+check2:
+            checkdict[c][:]=[_x for _x in checkdict[c] if _x>maxmarker]
 
         checklst = []
         for i,c in enumerate(check):
