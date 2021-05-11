@@ -22,6 +22,7 @@ top = """#!/bin/bash
 # SBATCH -N {}
 #SBATCH --time={}:{}:00
 #SBATCH --constraint="IB"
+#SBATCH --exclude=ccc0093,ccc0094,ccc0095,ccc0096,ccc0208,ccc0209,ccc0211,ccc0212,ccc0215,ccc0218
 #SBATCH --job-name="bands"
 #SBATCH --partition={}
 
@@ -38,12 +39,21 @@ jobs = open(os.path.join(svpath, depname), 'w')
 p = 0
 filelst = [[], [], [], [], [], [], [], []]
 print('Tell me what\'s in the names of input files,the code will search files with "*string*.in"')
-print('Or you can type "txt" to ask me looking up the "restart.txt"!')
+print('Or you can type "c","m",or "r" to ask me read '+
+'"complete.txt","modify.txt", or "restart.txt"!')
 iptformat=input('Type it here:')
 if iptformat=='':
 	iptformat='*.in'
-elif iptformat=='txt':
+elif iptformat=='r':
 	with open('restart.txt','r') as cc:
+		iptformat = cc.read().splitlines()
+		cc.close()
+elif iptformat=='m':
+	with open('modify.txt','r') as cc:
+		iptformat = cc.read().splitlines()
+		cc.close()
+elif iptformat=='c':
+	with open('complete.txt','r') as cc:
 		iptformat = cc.read().splitlines()
 		cc.close()
 else:

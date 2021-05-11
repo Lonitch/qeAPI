@@ -1,8 +1,12 @@
 """
 This script checks the integrity of QE output files. Any output file ends with 
-the strings in "check" list are considered as incomplete, and files do not end with 
-strings in "check2" list are also considered as incomplete. The code will then delete 
-the input files for completed jobs and leave the input files of incomplete jobs intact.
+the strings in "check" list are considered as incomplete, and files do not contain all
+the strings in "check2" list are also incomplete. The cases that have thier outputs 
+contain any of the strings in "check1" are ready to be restarted. The code will then 
+delete the input files for completed jobs and leave the input files of incomplete jobs intact.
+
+The input file names that correspond complete, erroneous, and ready-to-restart cases are
+written in the files, "complete.txt","modify.txt", and "restart.txt", respectively.
 
 To use this script, simply copy it to the folder where you save both input and output files
 
@@ -10,21 +14,22 @@ Created/maintained by Sizhe Liu
 """
 
 import glob,os,time
+from collections import defaultdict
 
 keyword = input('Tell me a keyword in output file names:')
 files = glob.glob('*{}*.out'.format(keyword))
 ans = input('Remove slurm-related output files?(Y/N):')
-print('Tell me the shortest time interval between now and '+ 
-'the latest modification time of the jobs for restart (default is 1hrs).')
-latest = input('Type it here: ')
-if latest == '':
-    latest = 1
-else:
-    latest = int(latest)
+ans2 = input('Remove input files of complete jobs?(Y/N):')
 # Things you don't want to see at the end of output files
-check = ['convergence NOT achieved','%%%%%']
-# Thins you want to see them all at the end of complete output files
-check2 = ['JOB DONE.']
+check = ['convergence NOT achieved','Error']
+# When the following things shown at end of the outputs, we restart the cases.
+# To see "Maximum CPU time exceeded" in the outputs, 
+# please set 'max_seconds' in your input files to be less than the max walltime.
+check1 = ['Maximum CPU time exceeded']
+# Things you want to see them all at the end of complete output files
+# For lattice relaxation, we can use 'End final coordinates'
+# For SCF calculation, it could be 'JOB DONE' or 'Total force'
+check2 = ['End final coordinates']
 # A list of files that are ready to restart
 rslst = []
 # A list of input files that need to be modified
@@ -32,44 +37,64 @@ mdlst = []
 # A list of files that are complete
 cplst = []
 for i,f in enumerate(files):
-    kpflg = False
     with open(f,'r') as cc:
         content = cc.readlines()
         cc.close()
     if len(content)<200:
-        kpflg=True # flag for keeping input files
         tempname = '.'.join(f.split('.')[:-1]+['in'])
         if tempname not in mdlst:
             mdlst.append(tempname)
     
     else:
-        temp = content[-200:]
-        for i, c in enumerate(check):
-            if any([c in t for t in temp]):
-                tempname = '.'.join(f.split('.')[:-1]+['in'])
-                if tempname not in mdlst:
-                    mdlst.append(tempname)
-                kpflg = True
+        temp = content
+        checkdict = defaultdict(list)
+        totcheck = check+check1+check2
+        for i,t in enumerate(temp):
+            for c in totcheck:
+                if c in t:
+                    checkdict[c].append(i)
 
-        checklst = [False for i in range(len(check2))]
-        for i, c2 in enumerate(check2):
-            if any([c2 in t for t in temp]):
-                checklst[i] = True
+        checklst = []
+        for i,c in enumerate(check):
+            if checkdict[c]:
+                checklst.append(True)
             else:
-                checklst[i] = False
-        if not all(checklst):
-            kpflg = True
-# incomplete output files that are last modified x hrs ago are ready to be restarted
-    if kpflg and (time.time()-os.stat(f).st_mtime)/3600>latest:
-        rslst.append('.'.join(f.split('.')[:-1]+['in']))
+                checklst.append(False)
+        if any(checklst):
+            tempname = '.'.join(f.split('.')[:-1]+['in'])
+            if tempname not in mdlst:
+                mdlst.append(tempname)
 
-    if not kpflg:
-        temp = f.split('.')[:-1]+['in']
+        checklst = []
+        for i,c in enumerate(check1):
+            if checkdict[c]:
+                checklst.append(True)
+            else:
+                checklst.append(False)
+        if any(checklst):
+            tempname = '.'.join(f.split('.')[:-1]+['in'])
+            if tempname not in rslst:
+                rslst.append(tempname)
+
+        checklst = []
+        for i,c in enumerate(check2):
+            if checkdict[c]:
+                checklst.append(True)
+            else:
+                checklst.append(False)
+        if all(checklst):
+            tempname = '.'.join(f.split('.')[:-1]+['in'])
+            if tempname not in cplst:
+                cplst.append(tempname)
+
+# Remove input files corresponding to complete cases. 
+if ans2=='Y' or ans2=='y':
+    for c in cplst:
         try:
-            os.remove('.'.join(temp))
+            os.remove(c)
+            print('remove {} !!!'.format(c))
         except:
-            pass
-        cplst.append(f)
+            print('{} is already removed!!!'.format(c))
 
 # Create a text file that record all the cases that need restart
 rsfile = open('restart.txt','w')

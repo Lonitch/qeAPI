@@ -22,12 +22,15 @@ Created/maintained by Sizhe Liu @ UIUC
 import os, glob
 from collections import defaultdict
 
-print('Tell me which file to look into: "m" for modify.txt and "r" for restart.txt')
+print('Tell me which file to look into: "c" for complete.txt, "m" for modify.txt,'+
+' and "r" for restart.txt')
 look = input('Type it here:')
 if look =='m':
     look = 'modify.txt'
 elif look =='r':
     look = 'restart.txt'
+elif look =='c':
+    look = 'complete.txt'
 else:
     print('You just gave me a different input, I will rewrite restart.txt '+
     'with the file names that have your input string in them.')
