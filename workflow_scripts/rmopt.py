@@ -8,12 +8,14 @@ Created by Sizhe Liu
 import os
 
 print('Which list of files you want to delete?'+
-' ("r" for "restart.txt", "m" for "modify.txt")')
+' ("c" for "complete.txt", "r" for "restart.txt", and "m" for "modify.txt")')
 look = input('Type it here: ')
 if look =='r':
         look = 'restart.txt'
 elif look=='m':
         look = 'modify.txt'
+elif look=='c':
+        look = 'complete.txt'
 else:
         print('You just gave me an unrecognized input!!!')
 
