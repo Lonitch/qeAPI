@@ -29,7 +29,7 @@ check1 = ['Maximum CPU time exceeded']
 # Things you want to see them all at the end of complete output files
 # For lattice relaxation, we can use 'End final coordinates'
 # For SCF calculation, it could be 'JOB DONE' or 'Total force'
-check2 = ['End final coordinates']
+check2 = ['End final coordinates','JOB DONE']
 # A list of files that are ready to restart
 rslst = []
 # A list of input files that need to be modified
@@ -40,7 +40,7 @@ for i,f in enumerate(files):
     with open(f,'r') as cc:
         content = cc.readlines()
         cc.close()
-    if len(content)<200:
+    if len(content)<200 and (time.time()-os.stat(f).st_mtime)/3600>0.5:
         tempname = '.'.join(f.split('.')[:-1]+['in'])
         if tempname not in mdlst:
             mdlst.append(tempname)
@@ -84,7 +84,7 @@ for i,f in enumerate(files):
                 checklst.append(False)
         if all(checklst):
             tempname = '.'.join(f.split('.')[:-1]+['in'])
-            if tempname not in cplst:
+            if tempname not in cplst and tempname not in rslst:
                 cplst.append(tempname)
 
 # Remove input files corresponding to complete cases. 
