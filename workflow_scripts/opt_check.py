@@ -80,7 +80,7 @@ for i,f in enumerate(files):
                 checklst.append(False)
         if any(checklst):
             tempname = '.'.join(f.split('.')[:-1]+['in'])
-            if tempname not in rslst:
+            if tempname not in rslst and tempname not in mdlst:
                 rslst.append(tempname)
 
         checklst = []
@@ -107,10 +107,10 @@ if ans2=='Y' or ans2=='y':
 rsfile = open('restart.txt','w')
 for r in rslst:
     rsfile.write(r+'\n')
-for m in mdlst:
-    if m not in rslst:
-        rsfile.write(m+'\n')
-rsfile.close()
+# for m in mdlst:
+#     if m not in rslst:
+#         rsfile.write(m+'\n')
+# rsfile.close()
 
 # Create a text file that keeps names of input files that need their parameters modified
 # in order to make calculation converge
