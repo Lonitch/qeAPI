@@ -21,7 +21,7 @@ files = glob.glob('*{}*.out'.format(keyword))
 ans = input('Remove slurm-related output files?(Y/N):')
 ans2 = input('Remove input files of complete jobs?(Y/N):')
 # SCF iteration marker
-marker = 'iteration # '
+marker = 'avg # of iterations'
 # Things you don't want to see at the end of output files
 # The second string in the list below is usually followed by error messages.
 check = ['convergence NOT achieved','%%%%%%']
@@ -30,9 +30,9 @@ check = ['convergence NOT achieved','%%%%%%']
 # please set 'max_seconds' in your input files to be less than the max walltime.
 check1 = ['Maximum CPU time exceeded']
 # Things you want to see them all at the end of complete output files
-# For lattice relaxation, we can use 'End final coordinates'
+# For lattice relaxation, we can use 'End final coordinates'(very strict one)
 # For SCF calculation, it could be 'JOB DONE' or 'Total force'
-check2 = ['End final coordinates','JOB DONE']
+check2 = ['JOB DONE']
 # A list of files that are ready to restart
 rslst = []
 # A list of input files that need to be modified
