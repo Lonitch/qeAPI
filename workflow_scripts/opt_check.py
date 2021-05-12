@@ -21,7 +21,7 @@ files = glob.glob('*{}*.out'.format(keyword))
 ans = input('Remove slurm-related output files?(Y/N):')
 ans2 = input('Remove input files of complete jobs?(Y/N):')
 # SCF iteration marker
-marker = 'iteration #  1'
+marker = 'iteration # '
 # Things you don't want to see at the end of output files
 # The second string in the list below is usually followed by error messages.
 check = ['convergence NOT achieved','%%%%%%']
