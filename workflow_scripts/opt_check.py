@@ -91,7 +91,7 @@ for i,f in enumerate(files):
                 checklst.append(False)
         if all(checklst):
             tempname = '.'.join(f.split('.')[:-1]+['in'])
-            if tempname not in cplst and tempname not in rslst:
+            if tempname not in cplst and tempname not in rslst and tempname not in mdlst:
                 cplst.append(tempname)
 
 # Remove input files corresponding to complete cases. 
