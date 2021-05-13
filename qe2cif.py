@@ -15,7 +15,7 @@ Units are converted using CODATA 2006 (Angstrom, eV, etc), as used internally by
 ESPRESSO.
 """
 
-import os,sys,json,ase
+import os,sys,json,ase,re
 import operator as op
 import warnings
 from collections import OrderedDict
@@ -793,6 +793,62 @@ def read_espresso_in(fileobj):
 
     return atoms
 
+def RepresentsInt(s):
+    try: 
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+def read_param_from_ipt(file):
+    """
+    Get parameters from espresso input file.
+    Currently, it ignores starting_magnetization/charge params
+    """
+    with open(file,'r') as f:
+        content = f.readlines()
+    res = {}
+    cardlst = ['&CONTROL','&SYSTEM','&ELECTRONS','&IONS','&CELL']
+    idx = 0
+    while idx<len(content):
+        card = content[idx].replace('\n','')
+        card = (card.replace(',','')).upper()
+        if card in cardlst:
+            res[card[1:]] = {}
+            while '/' not in content[idx]:
+                temp = content[idx].strip('\n')
+                temp = temp.strip(',')
+                temp = temp.replace(' ','')
+                temp = temp.split('=')
+                if len(temp)==2:
+                    try:
+                        float(temp[1])
+                        if RepresentsInt(temp[1]):
+                            temp[1] = int(temp[1])
+                        else:
+                            temp[1] = float(temp[1])
+                    except:
+                        temp[1] = temp[1].replace('"','')
+                        temp[1] = temp[1].replace('\'','')
+                    res[card[1:]][temp[0]] = temp[1]
+                idx+=1
+        elif 'K_POINTS' in card:
+            scheme = card.split(' ')[1]
+            if scheme=='CRYSTAL':
+                idx+=1
+                continue
+            else:
+                idx+=1
+                res['K_POINTS'] = {}
+                lst = [int(a) for a in content[idx].split(' ')]
+                res['K_POINTS']['scheme'] = scheme.lower()
+                res['K_POINTS']['x'] = lst[0]
+                res['K_POINTS']['y'] = lst[1]
+                res['K_POINTS']['z'] = lst[2]
+        else:
+            idx+=1
+    res['SYSTEM'] = {k:v for k,v in res['SYSTEM'].items() if 'starting' not in k}
+    return res
 
 def parse_pwo_start(lines, index=0):
     """Parse Quantum ESPRESSO calculation info from lines,
