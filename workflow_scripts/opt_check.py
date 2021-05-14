@@ -94,6 +94,12 @@ for i,f in enumerate(files):
             if tempname not in cplst and tempname not in rslst and tempname not in mdlst:
                 cplst.append(tempname)
 
+        # deal with unfinished ends
+        if len(content)-maxmarker<10 and (time.time()-os.stat(f).st_mtime)/3600>0.5:
+            tempname = '.'.join(f.split('.')[:-1]+['in'])
+            if tempname not in rslst and tempname not in mdlst:
+                rslst.append(tempname)
+
 # Remove input files corresponding to complete cases. 
 if ans2=='Y' or ans2=='y':
     for c in cplst:
