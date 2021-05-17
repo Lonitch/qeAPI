@@ -56,8 +56,18 @@ for i,f in enumerate(files):
             for c in totcheck:
                 if c in t:
                     checkdict[c].append(i)
+                    
         # We check various messages during the last SCF iteraction
-        maxmarker = max(checkdict[marker])
+        if not checkdict[marker] and (time.time()-os.stat(f).st_mtime)/3600>0.5:
+            tempname = '.'.join(f.split('.')[:-1]+['in'])
+            if tempname not in mdlst:
+                mdlst.append(tempname)
+            continue
+        elif not checkdict[marker]:
+            continue
+        else:
+            maxmarker = max(checkdict[marker])
+
         for c in check+check1+check2:
             checkdict[c][:]=[_x for _x in checkdict[c] if _x>maxmarker]
 
