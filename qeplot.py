@@ -318,15 +318,16 @@ def pdosplot(pdospath,ax,dospath=None,nscfpath=None,orbital=None,fermi=None,
         for comb in orbital:
             t1, t2 = comb
             key = t1+t2
-            pdos[t1+'('+t2+')']=np.zeros((totlen,3))
+            pdos[t1+'('+t2+')']=None
             keytyp.append(key)
         for f in pdosfiles:
             mid1,mid2 = f.split('#')[-2:]
             atm=mid1[mid1.find('(')+1:mid1.find(')')]
             n,m = mid2[:-1].split('(')
-            if atm+n+m in keytyp:
-                pdos[atm+'('+n+m+')']+=pd.read_csv(f, delimiter='\s+',header=None,skiprows=[0]).to_numpy()[:,:3]
-
+            if atm+n+m in keytyp and pdos[atm+'('+n+m+')'] is not None:
+                pdos[atm+'('+n+m+')'][:,1:]+=pd.read_csv(f, delimiter='\s+',header=None,skiprows=[0]).to_numpy()[:,1:]
+            elif atm+n+m in keytyp:
+                pdos[atm+'('+n+m+')'] = pd.read_csv(f, delimiter='\s+',header=None,skiprows=[0]).to_numpy()
     else:
         print('No orbital info provided,exiting...')
         return
