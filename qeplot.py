@@ -188,9 +188,9 @@ def dosplot(ax,dospath=None,datafile=None,tag='_dos',fermi=None,xrange=15,lw=2):
     # spin polarized results
     else:
         # red color for spin-up DOS
-        ax.plot(elevl,dos_data[:,1],'r-',linewidth=lw,label='spin up')
+        ax.plot(elevl,dos_data[:,2],'r-',linewidth=lw,label='spin up')
         # blue color for spin-down DOS
-        ax.plot(elevl,-dos_data[:,2],'b-',linewidth=lw,label='spin down')
+        ax.plot(elevl,-dos_data[:,3],'b-',linewidth=lw,label='spin down')
 
     # add a vertial line at fermi energy level
     ymin,ymax=ax.get_ylim()
