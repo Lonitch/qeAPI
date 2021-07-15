@@ -118,7 +118,7 @@ In this section we provide a way to compile Quantum Espresso on normal universit
 
 `cd qe-X.Y.Z/`
 
-`module load gcc intel/18.0 openmpi`
+`module load gcc openmpi`(you can also use `intel` package to compile QE, but using `gcc`+`openmpi` is generally safer)
 
 `./configure -enable-parallel`
 
@@ -130,9 +130,9 @@ In this section we provide a way to compile Quantum Espresso on normal universit
 
 (3) add `-I/path/to/libxc/include/` to `IFLAGS`
 
-(4) set `LD_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxc` if your libxc version>5.0. Otherwise, replace `-lxcf90` with `-lxcf03`
+(4) set `LD_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxc` if error happens during the compilation process, replace `-lxcf90` with `-lxcf03`
 
-(5) If libxc verstion>5.0, `xc_f03` must be repalced with `xc_f90` everywhere in the following files: `funct.f90`, `xc_lda_lsda_drivers.f90`, `xc_gga_drivers.f90`, `xc_mgga_drivers.f90`, `dmxc_drivers.f90` and `dgcxc_drivers.f90` in Modules folder and `xctest_qe_libxc.f90` in `PP/src` folder. 
+(5) If libxc verstion<5.0, `xc_f03` must be repalced with `xc_f90` everywhere in the following files: `funct.f90`, `xc_lda_lsda_drivers.f90`, `xc_gga_drivers.f90`, `xc_mgga_drivers.f90`, `dmxc_drivers.f90` and `dgcxc_drivers.f90` in Modules folder and `xctest_qe_libxc.f90` in `PP/src` folder. 
 
 (6) save the file, and run `make all`
 
