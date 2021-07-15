@@ -104,21 +104,37 @@ In this section we provide a way to compile Quantum Espresso on normal universit
 (1) Download `libxc` [here](https://www.tddft.org/programs/libxc/download/)
 (2) Upload the `tar.gz` file to `dft` folder
 (3) Unzip the file by using `tar -xvf libxc-x.y.z.tar.gz`, where `x`,`y`, and `z` are version numbers again
-(3) Run the following command(no change is needed):
+(4) Run the following command(no change is needed):
+
 `./configure --prefix=PATH/TO/LIBXC`
+
 `make`
+
 `make check`
+
 `make install`
-- Configure QE
+
+- Configure QE (Notice that you might need to change module version below)
+
 `cd qe-X.Y.Z/`
-`module load gcc intel/18.0`
-`./configure -enable-openmp=yes -with-scalapack=intel -with-libxc=yes -with-libxc-prefix=PATH/TO/LIBXC -with-libxc-include=PATH/TO/LIBXC/include`
+
+`module load gcc intel/18.0 openmpi`
+
+`./configure -enable-parallel`
 
 - Change make.inc file and make
+
 (1) open the `make.inc` file in the folder `qe-X.Y.Z` using `nano make.inc`
-(2) change the `DFLAGS` line into
-`DFLAGS         =  -D__DFTI -D__LIBXC -D__MPI -D__SCALAPACK -D__SPIN_BALANCED`
-(3) save the file, and run `make all`
+
+(2) change the `DFLAGS` line into `DFLAGS         =  -D__DFTI -D__LIBXC -D__MPI`
+
+(3) add `-I/path/to/libxc/include/` to `IFLAGS`
+
+(4) set `LD_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxc` if your libxc version>5.0. Otherwise, replace `-lxcf90` with `-lxcf03`
+
+(5) If libxc verstion>5.0, `xc_f03` must be repalced with `xc_f90` everywhere in the following files: `funct.f90`, `xc_lda_lsda_drivers.f90`, `xc_gga_drivers.f90`, `xc_mgga_drivers.f90`, `dmxc_drivers.f90` and `dgcxc_drivers.f90` in Modules folder and `xctest_qe_libxc.f90` in `PP/src` folder. 
+
+(6) save the file, and run `make all`
 
 ## Set up file system ready for DFT calculation
 1. create a folder at `/home/` named as `/pseudo/` to store your pseudopotential files
