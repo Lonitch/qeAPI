@@ -824,7 +824,7 @@ class qeIpt:
         for k in custom_dict.keys():
             if k=='SYSTEM':
                 for tk in custom_dict[k].keys():
-                    if tk in ['hubbard_u','starting_magnetization','starting_charge']:
+                    if tk in ['hubbard_u','hubbard_alpha','starting_magnetization','starting_charge']:
                         atyplst=list(atyp.keys())
                         if tk not in self.defaultval[k].keys():
                             self.defaultval[k][tk] = []
