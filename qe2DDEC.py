@@ -49,7 +49,7 @@ DDEC6
 # !!! please check if the values below coincide with the parameters in your pseudopotential files.
 # Specifically, coure number=atomic number-valence number. And valence number should be in every
 # self-respecting pseudopotential file.
-CORENUM = {'Li':0,'Na':2,'Cu':10,'Fe':10,'H':0,'K':10,'Mg':2,'N':2,
+CORENUM = {'Li':0,'Na':2,'Cu':10,'Fe':10,'H':0,'K':10,'Mg':2,'N':2,'Zn':10,
 'Ni':10,'O':2,'Rb':28,'S':10,'Se':28,'Ag':28,'Br':28,'C':2,'Cl':10,'Cs':46}
 
 def redistri_opt(optRoot,strlst):
@@ -371,3 +371,16 @@ def bond_order(iptpath):
     
     return combDict
 
+def atom_charge(iptpath):
+    if 'DDEC6_even_tempered_net_atomic_charges.xyz' not in os.listdir(iptpath):
+        print('No total_density.cube is found in the folder!')
+        return
+    # Read file 
+    data = open(os.path.join(iptpath,'DDEC6_even_tempered_net_atomic_charges.xyz')).readlines()
+    nat = int(data[0].strip())
+    chargeDict= defaultdict(list)
+    for line in data[2:2+nat]:
+        lst = line.split()
+        chargeDict[lst[0]].append(float(lst[-1]))
+
+    return chargeDict
