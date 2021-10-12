@@ -381,6 +381,32 @@ def atom_charge(iptpath):
     chargeDict= defaultdict(list)
     for line in data[2:2+nat]:
         lst = line.split()
-        chargeDict[lst[0]].append(float(lst[-1]))
+
+        # nac = number of proton - valence number(obtained from PP files)
+        # nomial charge=net atomic charge(NAC) - core electron number
+        chargeDict[lst[0]].append(float(lst[-1])-CORENUM[lst[0]])
 
     return chargeDict
+
+# Read out gross atom charges calculated from DFTB simulations
+def atom_charge_dftb(iptpath,chglab='detailed',xyzlab='geom.out'):
+    if '{}.out'.format(chglab) not in os.listdir(iptpath) or '{}.xyz'.format(xyzlab) not in os.listdir(iptpath):
+        print('No {}.out or {}.xyz is found in the folder!'.format(chglab,xyzlab))
+        return None
+    
+    # Read file
+    xyz = open(os.path.join(iptpath,'{}.xyz'.format(xyzlab))).readlines()
+    charge = open(os.path.join(iptpath,'{}.out'.format(chglab))).readlines()
+    nat = int(xyz[0].strip())
+    xyz = xyz[2:2+nat]
+    l = 0
+    while 'Atomic gross charges (e)' not in charge[l]:
+        l+=1
+    charge = charge[l+2:l+2+nat]
+
+    chargeDict = defaultdict(list)
+    for i in range(nat):
+        chargeDict[xyz[i].split()[0]].append(float(charge[i].split()[1]))
+
+    return chargeDict
+    
