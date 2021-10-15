@@ -9,11 +9,12 @@ Created by Sizhe @06/15/2020
 
 # !!! You need Python3.5+, scipy, and numpy to run current script !!!
 
-import os, shutil, re
+import os, shutil, re, sys
 from ase.io import read
 from collections import Counter, defaultdict
 import numpy as np
 import subprocess 
+from subprocess import check_output as chkout
 import itertools
 
 # DDECHEAD is a template for making input files for DDEC analysis
@@ -29,7 +30,7 @@ DDECHEAD = """<net charge>
 </periodicity along A, B, and C vectors>
 
 <atomic densities directory complete path>
-C:\\Users\\liu_s\\Downloads\\chargemol_09_26_2017\\chargemol_09_26_2017\\atomic_densities\\
+{}
 </atomic densities directory complete path>
 
 <input filename>
@@ -52,6 +53,18 @@ DDEC6
 CORENUM = {'Li':0,'Na':2,'Cu':10,'Fe':10,'H':0,'K':10,'Mg':2,'N':2,'Zn':10,
 'Ni':10,'O':2,'Rb':28,'S':10,'Se':28,'Ag':28,'Br':28,'C':2,'Cl':10,'Cs':46}
 
+
+def calc_core_electron_num(iptPath,mode='uspp'):
+    # calculate total number of core charges
+    # TO DO: implement modes of 'paw','dftb'
+    if mode.lower()=='uspp':
+        data = read(os.path.join(iptPath,"total_density.cube"), format='cube')
+        chemical_symbols = Counter(data.get_chemical_symbols())
+        coren = 0
+        for n,v in chemical_symbols.items():
+            coren += v*CORENUM[n]
+    return coren
+
 def redistri_opt(optRoot,strlst):
     # we use this function to build separate folders for different pp.x calculation cases
     # so that the results of DDEC analysis for each pp.x case will be found in the same folder 
@@ -69,7 +82,17 @@ def redistri_opt(optRoot,strlst):
         else:
             shutil.move(os.path.join(optRoot, f), os.path.join(optRoot,foldername))
 
-def prep_DDECipt(iptPath):
+def find_ddec(binName='ddec*serial',rootPath='~'):
+    # Find path to precompiled binary file 
+    return chkout('find {} -type f -name "{}"'.format(rootPath,binName),shell=True,encoding='utf-8').strip()
+
+def find_rho(folderName,rootPath='~'):
+    # Find path to the folder containing targeted cube file
+    temp=chkout('find {} -type d -name "{}"'.format(rootPath,folderName),shell=True,encoding='utf-8').split('\n')
+    temp = list(filter(None, temp))
+    return temp
+
+def prep_DDECipt(iptPath='.',densityPath=None):
     # This function is used to prepare input files for DDEC6 analysis using CUBE files from pp.x calcualtions
     # 'iptPath' tells where the "CUBE" file is stored, and the input file must be named as 'job_control.txt'.
     # Notice that the cube file should also be renamed as 'total_density.cube' in the same folder.
@@ -80,28 +103,32 @@ def prep_DDECipt(iptPath):
             # !!!change '//' into '\' when you use this script on Linux system!!!
             os.rename(os.path.join(iptPath,f),os.path.join(iptPath,"total_density.cube"))
 
-    # calculate total number of core charges
-    data = read(os.path.join(iptPath,"total_density.cube"), format='cube')
-    chemical_symbols = Counter(data.get_chemical_symbols())
-    coren = 0
-    for n,v in chemical_symbols.items():
-        coren += v*CORENUM[n]
+    coren = calc_core_electron_num(iptPath)
 
     # create 'job_control.txt'
     fn = open(os.path.join(iptPath,'job_control.txt'), "w")
-    fn.write(DDECHEAD.format(coren))
+    if densityPath is None:
+        densityPath = chkout('find ~ -type d -name "atomic_densities"',shell=True,encoding='utf-8').strip()
+        if len(densityPath)<16:
+            print('No atomic_densities folder is found, no job_control.txt is produced!')
+        if not densityPath.endswith('/'):
+            densityPath+='/'
+    fn.write(DDECHEAD.format(coren,densityPath))
     fn.close()
 
-def run_DDEC(iptPath,sourcePath):
+def run_DDEC(sourcePath,iptPath):
     # 'iptPath' is where you store your 'job_control.txt' and 'total_density.cube'
     # 'sourcePath' is the absolute path to the binary file.
     # The iptPath must be a raw path string with single backslashes
     # An example of iptPath in Windows OS: r'C:\User\Documents\H2O' for windows OS
     # An example of iptPath in Linux OS: r'/user/input/H2O'
     # !!! Please do not forget the raw string prefix "r" when you prepare the iptPath strings!!!
-    p = subprocess.Popen(sourcePath, universal_newlines=True, stdin=subprocess.PIPE)
-    p.communicate(iptPath)
-    print('complete!')
+    cur = os.getcwd()
+    os.chdir(iptPath)
+    p = subprocess.Popen((sourcePath), stdin=subprocess.PIPE)
+    p.wait()
+    print('complete! See output at "{}"'.format(iptPath))
+    os.chdir(cur)
 
 def checkme(iptPath):
     # This function should be run if your DDEC analysis was not conducted properly,i.e.no bond-order result is
@@ -410,3 +437,15 @@ def atom_charge_dftb(iptpath,chglab='detailed',xyzlab='geom.out'):
 
     return chargeDict
     
+
+if __name__=='__main__':
+    ddecpath = find_ddec()
+    
+    print('We find DDEC executable at:\n>>>'+ddecpath)
+    # Take one argument from commend line
+    iptfolders = find_rho(sys.argv[1])
+    print('We will search for cube file in:')
+    print(iptfolders)
+    for folder in iptfolders:
+        prep_DDECipt(folder)
+        run_DDEC(ddecpath,folder)

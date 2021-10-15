@@ -71,7 +71,7 @@ DEFAULTDICT = {
         'header':'ConjugateGradient',
         'LatticeOpt':'No',
         'Isotropic': 'No',
-        'MovedAtoms':'1:-1',
+        'MovedAtoms':'1:-1', # All atoms
         'MaxForceComponent':2E-4, # Ha/Bohr=0.5Ry/Bohr
         'MaxSteps':100,
         'OutputPrefix':"geom.out"
@@ -116,8 +116,8 @@ DEFAULTDICT = {
         'CalculateForces':'Yes',
         # Setting PDOS spectra
         'ProjectStates':{
-            'header':'',
-            'Region':[{'header':'','Atoms':'1:-1','OrbitalResolved':'Yes'}]
+            'header':'', # No header needed here, it will print as ProjectStates={}
+            'Region':[{'header':'','Atoms':'1:-1','OrbitalResolved':'No'}]
         }
     },
 
