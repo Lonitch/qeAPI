@@ -1,0 +1,85 @@
+#------------------------------------------------------------------------------
+#$Date: 2015-01-27 20:58:39 +0100 (Tue 27 de Jan de 2015) $
+#$Revision: 130149 $
+#$URL: svn://www.crystallography.net/cod/cif/1/00/10/1001022.cif $
+#------------------------------------------------------------------------------
+#
+# This file is available in the Crystallography Open Database (COD),
+# http://www.crystallography.net/
+#
+# All data on this site have been placed in the public domain by the
+# contributors.
+#
+data_1001022
+loop_
+_publ_author_name
+'Gasperin, M'
+_publ_section_title              'Dititanate de lanthane'
+_journal_coden_ASTM              ACBCAR
+_journal_name_full               'Acta Crystallographica B (24,1968-38,1982)'
+_journal_page_first              2129
+_journal_page_last               2130
+_journal_paper_doi               10.1107/S0567740875007005
+_journal_volume                  31
+_journal_year                    1975
+_chemical_formula_structural     'LA2 TI2 O7'
+_chemical_formula_sum            'La2 O7 Ti2'
+_chemical_name_systematic        'DILANTHANUM DITITANIUM OXIDE'
+_space_group_IT_number           4
+_symmetry_cell_setting           monoclinic
+_symmetry_Int_Tables_number      4
+_symmetry_space_group_name_Hall  'P 2c'
+_symmetry_space_group_name_H-M   'P 1 1 21'
+_cell_angle_alpha                90
+_cell_angle_beta                 90
+_cell_angle_gamma                98.60(2)
+_cell_formula_units_Z            4
+_cell_length_a                   7.800(3)
+_cell_length_b                   13.011(4)
+_cell_length_c                   5.546(2)
+_cell_volume                     556.5
+_refine_ls_R_factor_all          0.075
+_cod_database_code               1001022
+loop_
+_symmetry_equiv_pos_as_xyz
+x,y,z
+-x,-y,1/2+z
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_Wyckoff_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_attached_hydrogens
+_atom_site_calc_flag
+La1 La3+ 2 a 0.2789(3) 0.1138(2) 0.25 1. 0 d
+La2 La3+ 2 a 0.7741(3) 0.0993(2) 0.2543(6) 1. 0 d
+La3 La3+ 2 a 0.3502(3) 0.3909(2) 0.8026(6) 1. 0 d
+La4 La3+ 2 a 0.8525(3) 0.4164(2) 0.8413(6) 1. 0 d
+Ti1 Ti4+ 2 a 0.0320(9) 0.1191(5) 0.7630(16) 1. 0 d
+Ti2 Ti4+ 2 a 0.5271(9) 0.1200(5) 0.7598(16) 1. 0 d
+Ti3 Ti4+ 2 a 0.0780(9) 0.3228(5) 0.2946(15) 1. 0 d
+Ti4 Ti4+ 2 a 0.5833(9) 0.3263(5) 0.2975(15) 1. 0 d
+O1 O2- 2 a 0.776(3) 0.109(2) 0.799(5) 1. 0 d
+O2 O2- 2 a 0.275(4) 0.090(2) 0.698(5) 1. 0 d
+O3 O2- 2 a 0.030(3) 0.016(2) 0.024(6) 1. 0 d
+O4 O2- 2 a 0.479(3) 0.020(2) 0.026(5) 1. 0 d
+O5 O2- 2 a 0.098(3) 0.226(2) 0.969(6) 1. 0 d
+O6 O2- 2 a 0.517(3) 0.229(2) 0.963(5) 1. 0 d
+O7 O2- 2 a 0.033(3) 0.187(2) 0.460(5) 1. 0 d
+O8 O2- 2 a 0.559(3) 0.189(2) 0.455(5) 1. 0 d
+O9 O2- 2 a 0.089(4) 0.409(2) 0.554(3) 1. 0 d
+O10 O2- 2 a 0.613(4) 0.398(2) 0.569(6) 1. 0 d
+O11 O2- 2 a 0.121(3) 0.432(2) 0.078(5) 1. 0 d
+O12 O2- 2 a 0.599(3) 0.440(2) 0.089(5) 1. 0 d
+O13 O2- 2 a 0.327(3) 0.312(1) 0.323(4) 1. 0 d
+O14 O2- 2 a 0.825(3) 0.300(2) 0.221(5) 1. 0 d
+loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+La3+ 3.000
+Ti4+ 4.000
+O2- -2.000

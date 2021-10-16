@@ -1,0 +1,281 @@
+#------------------------------------------------------------------------------
+#$Date: 2016-02-14 05:40:26 +0100 (Sun 14 de Feb de 2016) $
+#$Revision: 176432 $
+#$URL: svn://www.crystallography.net/cod/cif/2/00/16/2001614.cif $
+#------------------------------------------------------------------------------
+#
+# This file is available in the Crystallography Open Database (COD),
+# http://www.crystallography.net/. The original data for this entry
+# were provided by IUCr Journals, http://journals.iucr.org/.
+#
+# The file may be used within the scientific community so long as
+# proper attribution is given to the journal article from which the
+# data were obtained.
+#
+data_2001614
+loop_
+_publ_author_name
+'Jones, P. G.'
+_publ_section_title
+;
+ Di-\m-nitrato-bis[bis(triphenylphosphine)silver(I)],
+ [(Ph~3~P)~2~AgNO~3~]~2~, at 178 K
+;
+_journal_issue                   6
+_journal_name_full               'Acta Crystallographica Section C'
+_journal_page_first              1148
+_journal_page_last               1150
+_journal_paper_doi               10.1107/S0108270192012484
+_journal_volume                  49
+_journal_year                    1993
+_chemical_formula_sum            'C72 H60 Ag2 N2 O6 P4'
+_chemical_formula_weight         1388.8
+_space_group_IT_number           3
+_symmetry_cell_setting           orthorhombic
+_symmetry_space_group_name_Hall  'P 2'
+_symmetry_space_group_name_H-M   'P 1 1 2'
+_cell_angle_alpha                90
+_cell_angle_beta                 90
+_cell_angle_gamma                90
+_cell_formula_units_Z            2
+_cell_length_a                   14.904(5)
+_cell_length_b                   23.169(7)
+_cell_length_c                   9.262(3)
+_cell_measurement_reflns_used    50
+_cell_measurement_temperature    178
+_cell_measurement_theta_max      11.5
+_cell_measurement_theta_min      10
+_cell_volume                     3198.3(18)
+_diffrn_measurement_device       'Siemens R3'
+_diffrn_measurement_method       \w
+_diffrn_radiation_type           MoK\a
+_diffrn_radiation_wavelength     0.71069
+_diffrn_reflns_av_R_equivalents  0.016
+_diffrn_reflns_limit_h_max       19
+_diffrn_reflns_limit_h_min       0
+_diffrn_reflns_limit_k_max       30
+_diffrn_reflns_limit_k_min       -30
+_diffrn_reflns_limit_l_max       1
+_diffrn_reflns_limit_l_min       -12
+_diffrn_reflns_number            7422
+_diffrn_reflns_theta_max         27.5
+_diffrn_standards_decay_%        +-1.5
+_diffrn_standards_interval_count 197
+_diffrn_standards_number         3
+_exptl_absorpt_coefficient_mu    0.77
+_exptl_absorpt_correction_T_max  0.88
+_exptl_absorpt_correction_T_min  0.84
+_exptl_absorpt_correction_type   '\y scans'
+_exptl_crystal_colour            colourless
+_exptl_crystal_density_diffrn    1.442
+_exptl_crystal_description       prism
+_exptl_crystal_size_max          0.4
+_exptl_crystal_size_mid          0.35
+_exptl_crystal_size_min          0.3
+_refine_diff_density_max         0.8
+_refine_diff_density_min         -1.1
+_refine_ls_extinction_method     none
+_refine_ls_goodness_of_fit_obs   1.1
+_refine_ls_hydrogen_treatment    'H atoms riding'
+_refine_ls_number_parameters     390
+_refine_ls_number_reflns         5363
+_refine_ls_R_factor_obs          0.040
+_refine_ls_shift/esd_max         0.002
+_refine_ls_structure_factor_coef F
+_refine_ls_weighting_details     'w = 1/[\s^2^(F)+0.0002F^2^]'
+_refine_ls_weighting_scheme      calc
+_refine_ls_wR_factor_obs         0.035
+_reflns_number_observed          5363
+_reflns_number_total             7365
+_reflns_observed_criterion       F>4\s(F)
+_cod_data_source_file            ha1025.cif
+_cod_data_source_block           ha1025_structure_1_of_1
+_cod_depositor_comments
+;
+The following automatic conversions were performed:
+
+'_refine_ls_weighting_scheme' value '1/[\s^2^(F)+0.0002F^2^]' was
+changed to 'calc'. New tag '_refine_ls_weighting_details' was
+created. The value of the new tag was set to 'w =
+1/[\s^2^(F)+0.0002F^2^]'.
+
+Automatic conversion script
+Id: cif_fix_values 3143 2015-03-26 13:38:13Z robertas 
+;
+_cod_original_cell_volume        3198(2)
+_cod_original_sg_symbol_Hall     'P 2 2ab'
+_cod_original_sg_symbol_H-M      'P 21 21 2'
+_cod_database_code               2001614
+loop_
+_symmetry_equiv_pos_as_xyz
+x,y,z
+1-x,1-y,z
+loop_
+_atom_site_label
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_U_iso_or_equiv
+Ag .61200(2) .534280(10) .51900(3) .2970(10)
+P(1) .61043(8) .63755(4) .46307(11) .278(3)
+P(2) .75275(8) .48349(4) .55272(11) .269(3)
+C(11) .5151(3) .6664(2) .3620(5) .267(15)
+C(12) .5226(3) .7000(2) .2398(5) .347(16)
+C(13) .4465(4) .7226(2) .1752(6) .48(2)
+C(14) .3630(3) .7124(2) .2339(7) .51(2)
+C(15) .3547(3) .6785(3) .3534(6) .51(2)
+C(16) .4303(3) .6555(2) .4168(5) .425(18)
+C(21) .7084(3) .6562(2) .3546(5) .321(16)
+C(22) .7211(3) .6244(2) .2286(5) .431(18)
+C(23) .7975(4) .6327(3) .1439(7) .57(2)
+C(24) .8625(4) .6719(3) .1901(7) .59(2)
+C(25) .8514(3) .7024(2) .3164(7) .51(2)
+C(26) .7744(3) .6949(2) .4004(6) .404(17)
+C(31) .6137(3) .6862(2) .6171(4) .315(13)
+C(32) .6033(3) .7453(2) .6032(5) .403(16)
+C(33) .6055(4) .7809(2) .7228(6) .480(18)
+C(34) .6175(4) .7575(3) .8568(6) .57(2)
+C(35) .6267(4) .6995(3) .8732(5) .65(3)
+C(36) .6255(4) .6627(2) .7530(5) .471(19)
+C(41) .7504(3) .4171(2) .6603(5) .292(14)
+C(42) .6752(3) .4062(2) .7419(5) .408(18)
+C(43) .6701(4) .3578(2) .8285(6) .53(2)
+C(44) .7400(4) .3202(2) .8356(6) .48(2)
+C(45) .8155(4) .3308(2) .7560(6) .50(2)
+C(46) .8210(4) .3788(2) .6677(6) .448(18)
+C(51) .8087(3) .4631(2) .3862(4) .296(13)
+C(52) .7547(3) .4545(2) .2632(5) .352(16)
+C(53) .7931(4) .4380(3) .1367(6) .50(2)
+C(54) .8838(4) .4289(2) .1240(5) .468(18)
+C(55) .9377(4) .4376(2) .2440(5) .417(18)
+C(56) .9011(3) .4545(2) .3734(5) .332(15)
+C(61) .8352(3) .5287(2) .6452(4) .269(13)
+C(62) .8601(3) .5189(2) .7873(5) .365(16)
+C(63) .9168(3) .5573(2) .8570(6) .440(18)
+C(64) .9470(3) .6054(2) .7905(6) .443(19)
+C(65) .9218(3) .6155(2) .6477(6) .462(19)
+C(66) .8671(3) .5773(2) .5773(5) .388(17)
+N(1) .5000 .5000 .8129(7) .48(3)
+N(2) .5000 .5000 .2291(7) .52(3)
+O(1) .5644(2) .5253(2) .8813(3) .410(12)
+O(2) .5000 .5000 .6739(4) .367(17)
+O(3) .5664(2) .5218(2) .1575(3) .408(13)
+O(4) .5000 .5000 .3638(4) .367(17)
+H(12) .5807 .7073 .1991 ?
+H(13) .4519 .7458 .0897 ?
+H(14) .3105 .7289 .1902 ?
+H(15) .2967 .6709 .3944 ?
+H(16) .4250 .6310 .4998 ?
+H(22) .6769 .5964 .2007 ?
+H(23) .8054 .6115 .0557 ?
+H(24) .9153 .6779 .1327 ?
+H(25) .8973 .7286 .3474 ?
+H(26) .7662 .7162 .4883 ?
+H(32) .5950 .7616 .5088 ?
+H(33) .5997 .8219 .7120 ?
+H(34) .6174 .7818 .9407 ?
+H(35) .6348 .6835 .9679 ?
+H(36) .6331 .6218 .7642 ?
+H(42) .6256 .4325 .7360 ?
+H(43) .6173 .3510 .8854 ?
+H(44) .7365 .2863 .8949 ?
+H(45) .8656 .3050 .7636 ?
+H(46) .8737 .3854 .6105 ?
+H(52) .6910 .4600 .2694 ?
+H(53) .7559 .4326 .0531 ?
+H(54) .9095 .4166 .0340 ?
+H(55) 1.0014 .4318 .2365 ?
+H(56) .9390 .4603 .4560 ?
+H(62) .8378 .4855 .8369 ?
+H(63) .9352 .5469 .9545 ?
+H(64) .9850 .6323 .8404 ?
+H(65) .9429 .6495 .5988 ?
+H(66) .8501 .5844 .4789 ?
+loop_
+_geom_angle_atom_site_label_1
+_geom_angle_atom_site_label_2
+_geom_angle_atom_site_label_3
+_geom_angle_site_symmetry_3
+_geom_angle
+_geom_angle_publ_flag
+P(1) Ag P(2) . 120.60(10) yes
+P(2) Ag O(2) . 111.90(10) yes
+P(2) Ag O(4) . 122.10(10) yes
+Ag P(1) C(11) . 118.30(10) yes
+C(11) P(1) C(21) . 104.6(2) yes
+C(11) P(1) C(31) . 101.3(2) yes
+Ag P(2) C(41) . 117.4(2) yes
+C(41) P(2) C(51) . 104.6(2) yes
+C(41) P(2) C(61) . 103.8(2) yes
+O(1) N(1) O(2) . 119.4(3) yes
+O(3) N(2) O(4) . 120.8(3) yes
+Ag O(2) N(1) . 127.80(10) yes
+Ag O(4) N(2) . 127.90(10) yes
+P(1) Ag O(2) . 117.00(10) yes
+P(1) Ag O(4) . 101.20(10) yes
+O(2) Ag O(4) . 75.70(10) yes
+Ag P(1) C(21) . 109.9(2) yes
+Ag P(1) C(31) . 116.00(10) yes
+C(21) P(1) C(31) . 105.3(2) yes
+Ag P(2) C(51) . 114.40(10) yes
+Ag P(2) C(61) . 111.30(10) yes
+C(51) P(2) C(61) . 103.8(2) yes
+O(1) N(1) O(1) 2 121.2(5) yes
+O(3) N(2) O(3) 2 118.3(6) yes
+Ag O(2) Ag 2 104.4(2) yes
+Ag O(4) Ag 2 104.3(2) yes
+loop_
+_geom_bond_atom_site_label_1
+_geom_bond_atom_site_label_2
+_geom_bond_distance
+_geom_bond_publ_flag
+Ag P(1) 2.4480(10) yes
+Ag O(2) 2.340(3) yes
+P(1) C(11) 1.828(5) yes
+P(1) C(31) 1.818(4) yes
+P(2) C(51) 1.816(4) yes
+C(11) C(12) 1.377(6) yes
+C(12) C(13) 1.385(7) yes
+C(14) C(15) 1.363(8) yes
+C(21) C(22) 1.393(7) yes
+C(22) C(23) 1.396(8) yes
+C(24) C(25) 1.376(9) yes
+C(31) C(32) 1.385(6) yes
+C(32) C(33) 1.381(7) yes
+C(34) C(35) 1.360(9) yes
+C(41) C(42) 1.374(7) yes
+C(42) C(43) 1.382(8) yes
+C(44) C(45) 1.366(8) yes
+C(51) C(52) 1.409(6) yes
+C(52) C(53) 1.358(7) yes
+C(54) C(55) 1.386(7) yes
+C(61) C(62) 1.386(6) yes
+C(62) C(63) 1.386(7) yes
+C(64) C(65) 1.395(8) yes
+N(1) O(1) 1.290(4) yes
+N(2) O(3) 1.295(5) yes
+Ag P(2) 2.4250(10) yes
+Ag O(4) 2.341(3) yes
+P(1) C(21) 1.824(5) yes
+P(2) C(41) 1.833(5) yes
+P(2) C(61) 1.828(4) yes
+C(11) C(16) 1.386(7) yes
+C(13) C(14) 1.379(8) yes
+C(15) C(16) 1.377(7) yes
+C(21) C(26) 1.396(7) yes
+C(23) C(24) 1.394(9) yes
+C(25) C(26) 1.398(8) yes
+C(31) C(36) 1.382(6) yes
+C(33) C(34) 1.366(8) yes
+C(35) C(36) 1.402(8) yes
+C(41) C(46) 1.379(7) yes
+C(43) C(44) 1.359(8) yes
+C(45) C(46) 1.383(7) yes
+C(51) C(56) 1.397(6) yes
+C(53) C(54) 1.374(9) yes
+C(55) C(56) 1.374(7) yes
+C(61) C(66) 1.375(6) yes
+C(63) C(64) 1.352(8) yes
+C(65) C(66) 1.370(7) yes
+N(1) P(2) 1.288(7) yes
+N(2) O(4) 1.248(8) yes

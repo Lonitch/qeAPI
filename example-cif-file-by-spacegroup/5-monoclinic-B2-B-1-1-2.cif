@@ -1,0 +1,68 @@
+#------------------------------------------------------------------------------
+#$Date: 2016-12-12 03:16:44 +0100 (Mon 12 de Dec de 2016) $
+#$Revision: 189062 $
+#$URL: svn://www.crystallography.net/cod/cif/2/10/68/2106841.cif $
+#------------------------------------------------------------------------------
+#
+# This file is available in the Crystallography Open Database (COD),
+# http://www.crystallography.net/. The original data for this entry
+# were provided by IUCr Journals, http://journals.iucr.org/.
+#
+# The file may be used within the scientific community so long as
+# proper attribution is given to the journal article from which the
+# data were obtained.
+#
+data_2106841
+loop_
+_publ_author_name
+'Bergerhoff, G.'
+'Goost, L.'
+_publ_section_title
+;
+ Ammoniumfluorostannat(II)
+;
+_journal_name_full               'Acta Crystallographica B (24,1968-38,1982)'
+_journal_page_first              632
+_journal_page_last               633
+_journal_volume                  29
+_journal_year                    1973
+_chemical_formula_sum            'F3 H4 N Sn'
+_chemical_name_systematic        'N H4 Sn F3'
+_space_group_IT_number           5
+_symmetry_space_group_name_Hall  'B 2'
+_symmetry_space_group_name_H-M   'B 1 1 2'
+_cell_angle_alpha                90
+_cell_angle_beta                 90
+_cell_angle_gamma                125
+_cell_formula_units_Z            4
+_cell_length_a                   11.66
+_cell_length_b                   6.507
+_cell_length_c                   6.859
+_cell_volume                     426.290
+_citation_journal_id_ASTM        ACBCAR
+_cod_data_source_file            Bergerhoff_ACBCAR_1973_649.cif
+_cod_data_source_block           H4F3N1Sn1
+_cod_original_cell_volume        426.2896
+_cod_original_sg_symbol_Hall     'C 2y (-x,z,y)'
+_cod_original_formula_sum        'H4 F3 N1 Sn1'
+_cod_database_code               2106841
+loop_
+_symmetry_equiv_pos_as_xyz
+x,y,z
+-x,-y,z
+x+1/2,y,z+1/2
+-x+1/2,-y,z+1/2
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+_atom_site_attached_hydrogens
+F1 F-1 0.114 0.167 0.363 1 0.0 0
+F2 F-1 0.788 0.831 0.753 1 0.0 0
+N1 N-3 0.122 0.354 0.973 1 0.0 4
+F3 F-1 0.348 0.15 0.414 1 0.0 0
+Sn1 Sn+2 0.3623 0.0864 0 1 0.0 0
