@@ -1,0 +1,61 @@
+Geometry = GenFormat{
+<<< "IRMOF-1.gen"
+}
+Driver = ConjugateGradient{
+MovedAtoms = 1:-1
+MaxForceComponent = 0.0001
+MaxSteps = 100
+OutputPrefix = "geom.out"
+}
+Hamiltonian = DFTB{
+SCC = Yes
+SCCTolerance = 1e-08
+ShellResolvedSCC = No
+SlaterKosterFiles = Type2FileNames{
+Prefix = /u/sizheliu/3ob-3-1/
+Separator = "-"
+Suffix = ".skf"
+}
+MaxAngularMomentum{
+H = "s"
+O = "p"
+C = "p"
+Zn = "d"
+}
+ThirdOrderFull = Yes
+HubbardDerivs{
+H = -0.1857
+O = -0.1575
+C = -0.1492
+Zn = -0.03
+}
+HCorrection = Damping{
+Exponent = 4.0
+}
+KPointsAndWeights = SupercellFolding{
+1 0 0
+0 1 0
+0 0 1
+0.0 0.0 0.0
+}
+}
+Options{
+WriteChargesAsText = Yes
+WriteDetailedXML = Yes
+}
+Analysis{
+CalculateForces = Yes
+ProjectStates = {
+Region = {
+Atoms = 1:-1
+OrbitalResolved = No
+}
+}
+}
+ParserOptions{
+ParserVersion = 7
+}
+Parallel{
+Groups = 1
+UseOmpThreads = Yes
+}

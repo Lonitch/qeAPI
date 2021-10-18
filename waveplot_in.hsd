@@ -1,0 +1,23 @@
+# General options
+
+Options {
+  TotalChargeDensity = Yes           # Total density be plotted?
+  PlottedKPoints = 1
+  PlottedLevels = 1:-1
+  PlottedSpins = 1
+  NrOfPoints = { 50 50 50 }             # Number of grid points in each direction
+  NrOfCachedGrids = -1               # Nr of cached grids (speeds up things)
+  Verbose = Yes                      # Wanna see a lot of messages?
+}
+
+DetailedXml = "detailed.xml"         # File containing the detailed xml output
+                                     # of DFTB+
+EigenvecBin = "eigenvec.bin"
+
+Basis {
+  Resolution = 0.01
+  # Including mio-1-1.hsd. (If you use a set, which depends on other sets,
+  # the wfc.*.hsd files for each required set must be included in a similar
+  # way.)
+  <<+ "/u/sizheliu/3ob-3-1/wfc.3ob-3-1.hsd"
+}
