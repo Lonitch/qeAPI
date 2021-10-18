@@ -52,17 +52,27 @@ DDEC6
 # self-respecting pseudopotential file.
 CORENUM = {'Li':0,'Na':2,'Cu':10,'Fe':10,'H':0,'K':10,'Mg':2,'N':2,'Zn':10,
 'Ni':10,'O':2,'Rb':28,'S':10,'Se':28,'Ag':28,'Br':28,'C':2,'Cl':10,'Cs':46}
+# Core electron numbers for atomic types in DFTB calculations. The numbers are calculated as:
+# core_num = atom_number - valence_number
+# and gross_charge = valence_number - electron_Nr
+# where gross_charge and electron_Nr are stored in "detailed.out"
+# obtained from dftb+ calculations 
+CORENUM_DFTB = {'Zn':18,'H':0,'O':2,'C':2}
 
 
 def calc_core_electron_num(iptPath,mode='uspp'):
     # calculate total number of core charges
-    # TO DO: implement modes of 'paw','dftb'
-    if mode.lower()=='uspp':
-        data = read(os.path.join(iptPath,"total_density.cube"), format='cube')
-        chemical_symbols = Counter(data.get_chemical_symbols())
-        coren = 0
-        for n,v in chemical_symbols.items():
+    # TO DO: implement modes of 'paw'
+    
+    data = read(os.path.join(iptPath,"total_density.cube"), format='cube')
+    chemical_symbols = Counter(data.get_chemical_symbols())
+    coren = 0
+    for n,v in chemical_symbols.items():
+        if mode.lower()=='uspp':
             coren += v*CORENUM[n]
+        elif mode.lower()=='dftb':
+            coren += v*CORENUM_DFTB[n]
+
     return coren
 
 def redistri_opt(optRoot,strlst):
@@ -92,7 +102,7 @@ def find_rho(folderName,rootPath='~'):
     temp = list(filter(None, temp))
     return temp
 
-def prep_DDECipt(iptPath='.',densityPath=None):
+def prep_DDECipt(iptPath='.',densityPath=None,mode='uspp'):
     # This function is used to prepare input files for DDEC6 analysis using CUBE files from pp.x calcualtions
     # 'iptPath' tells where the "CUBE" file is stored, and the input file must be named as 'job_control.txt'.
     # Notice that the cube file should also be renamed as 'total_density.cube' in the same folder.
@@ -103,7 +113,7 @@ def prep_DDECipt(iptPath='.',densityPath=None):
             # !!!change '//' into '\' when you use this script on Linux system!!!
             os.rename(os.path.join(iptPath,f),os.path.join(iptPath,"total_density.cube"))
 
-    coren = calc_core_electron_num(iptPath)
+    coren = calc_core_electron_num(iptPath,mode)
 
     # create 'job_control.txt'
     fn = open(os.path.join(iptPath,'job_control.txt'), "w")
@@ -447,5 +457,8 @@ if __name__=='__main__':
     print('We will search for cube file in:')
     print(iptfolders)
     for folder in iptfolders:
-        prep_DDECipt(folder)
+        if 'detailed.out' in os.listdir(folder):
+            prep_DDECipt(folder,mode='dftb')
+        else:
+            prep_DDECipt(folder,mode='uspp')
         run_DDEC(ddecpath,folder)
